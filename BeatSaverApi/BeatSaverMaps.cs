@@ -5,8 +5,8 @@ public class BeatSaverMaps
     public Doc[] docs { get; set; }
     public int totalDocs { get; set; }
     public int lastPage { get; set; }
-    public object prevPage { get; set; }
-    public int nextPage { get; set; }
+    public int? prevPage { get; set; }
+    public int? nextPage { get; set; }
 }
 
 public class Doc
@@ -24,6 +24,13 @@ public class Doc
     public string directDownload { get; set; }
     public string downloadURL { get; set; }
     public string coverURL { get; set; }
+    public string realCoverURL
+    {
+        get
+        {
+            return $"https://beatsaver.com{coverURL}";
+        }
+    }
 }
 
 public class Metadata
@@ -36,7 +43,7 @@ public class Metadata
     public string songAuthorName { get; set; }
     public string songName { get; set; }
     public string songSubName { get; set; }
-    public int bpm { get; set; }
+    public float bpm { get; set; }
 }
 
 public class Difficulties
@@ -67,7 +74,7 @@ public class Easy
 {
     public float duration { get; set; }
     public int length { get; set; }
-    public int njs { get; set; }
+    public float njs { get; set; }
     public float njsOffset { get; set; }
     public int bombs { get; set; }
     public int notes { get; set; }
@@ -78,7 +85,7 @@ public class Expert
 {
     public float duration { get; set; }
     public int length { get; set; }
-    public int njs { get; set; }
+    public float njs { get; set; }
     public float njsOffset { get; set; }
     public int bombs { get; set; }
     public int notes { get; set; }
@@ -89,7 +96,7 @@ public class Expertplus
 {
     public float duration { get; set; }
     public int length { get; set; }
-    public int njs { get; set; }
+    public float njs { get; set; }
     public float njsOffset { get; set; }
     public int bombs { get; set; }
     public int notes { get; set; }
@@ -100,7 +107,7 @@ public class Hard
 {
     public float duration { get; set; }
     public int length { get; set; }
-    public int njs { get; set; }
+    public float njs { get; set; }
     public float njsOffset { get; set; }
     public int bombs { get; set; }
     public int notes { get; set; }
@@ -111,8 +118,8 @@ public class Normal
 {
     public float duration { get; set; }
     public int length { get; set; }
-    public int njs { get; set; }
-    public int njsOffset { get; set; }
+    public float njs { get; set; }
+    public float njsOffset { get; set; }
     public int bombs { get; set; }
     public int notes { get; set; }
     public int obstacles { get; set; }
