@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection.Metadata.Ecma335;
 
 public class BeatSaverMaps
 {
@@ -7,6 +8,21 @@ public class BeatSaverMaps
     public int lastPage { get; set; }
     public int? prevPage { get; set; }
     public int? nextPage { get; set; }
+    public int currentPage
+    {
+        get
+        {
+            return nextPage.HasValue ? (nextPage.Value - 1) : (prevPage.Value + 1);
+        }
+    }
+    public int currentPageReal
+    {
+        get { return currentPage + 1; }
+    }
+    public int lastPageReal
+    {
+        get { return lastPage + 1; }
+    }
 }
 
 public class Doc

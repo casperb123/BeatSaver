@@ -6,6 +6,7 @@ namespace BeatSaverApi
 {
     public enum MapSort
     {
+        Search,
         Hot,
         Rating,
         Latest,

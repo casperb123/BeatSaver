@@ -60,7 +60,7 @@ namespace BeatSaverApi
             }
         }
 
-        public async Task<BeatSaverMaps> GetBeatSaverMaps(string query, int? page = null)
+        public async Task<BeatSaverMaps> GetBeatSaverMaps(string query, int page = 0)
         {
             using (WebClient webClient = new WebClient())
             {
