@@ -23,7 +23,6 @@ namespace BeatSaverApi
         private readonly string downloadPath;
         private string songsPath;
 
-        public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressed;
         public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
 
         public BeatSaver(string songsPath)
@@ -74,10 +73,12 @@ namespace BeatSaverApi
                 }
 
                 BeatSaverMaps beatSaverMaps = JsonConvert.DeserializeObject<BeatSaverMaps>(json);
+                string[] songsDownloaded = Directory.GetDirectories(songsPath);
+
                 foreach (Doc song in beatSaverMaps.docs)
                 {
                     foreach (string directory in Directory.GetDirectories(songsPath))
-                        song.isDownloaded = Directory.GetDirectories(songsPath).Any(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.key);
+                        song.isDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name == song.hash);
                 }
 
                 return beatSaverMaps;
@@ -90,7 +91,17 @@ namespace BeatSaverApi
             {
                 webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
                 string json = await webClient.DownloadStringTaskAsync($"{beatSaverSearchApi}/{page}?q={query}");
-                return JsonConvert.DeserializeObject<BeatSaverMaps>(json);
+
+                BeatSaverMaps beatSaverMaps = JsonConvert.DeserializeObject<BeatSaverMaps>(json);
+                string[] songsDownloaded = Directory.GetDirectories(songsPath);
+
+                foreach (Doc song in beatSaverMaps.docs)
+                {
+                    foreach (string directory in Directory.GetDirectories(songsPath))
+                        song.isDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name == song.hash);
+                }
+
+                return beatSaverMaps;
             }
         }
 
@@ -98,11 +109,18 @@ namespace BeatSaverApi
         {
             string downloadFilePath = $@"{downloadPath}\{song.key}.zip";
             string downloadString = $"{beatSaver}{song.downloadURL}";
+            string extractPath = $@"{songsPath}\{song.hash}";
+
+            if (!Directory.Exists(extractPath))
+                Directory.CreateDirectory(extractPath);
 
             using (WebClient webClient = new WebClient())
             {
                 webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
                 await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
+                ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
+                File.Delete(downloadFilePath);
+
                 DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
             }
         }
@@ -111,7 +129,7 @@ namespace BeatSaverApi
         {
             if (song.isDownloaded)
             {
-                string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Contains(song.key));
+                string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name == song.hash);
 
                 if (!string.IsNullOrEmpty(directory))
                     Directory.Delete(directory, true);
