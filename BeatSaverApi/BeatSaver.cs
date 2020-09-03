@@ -76,10 +76,8 @@ namespace BeatSaverApi
                 string[] songsDownloaded = Directory.GetDirectories(songsPath);
 
                 foreach (Doc song in beatSaverMaps.docs)
-                {
                     foreach (string directory in Directory.GetDirectories(songsPath))
-                        song.isDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name == song.hash);
-                }
+                        song.isDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.key);
 
                 return beatSaverMaps;
             }
@@ -107,9 +105,28 @@ namespace BeatSaverApi
 
         public async Task DownloadSong(Doc song)
         {
+            string songName = song.name
+                .Replace("<", "")
+                .Replace(">", "")
+                .Replace(":", "")
+                .Replace("/", "")
+                .Replace(@"\", "")
+                .Replace("|", "")
+                .Replace("?", "")
+                .Replace("*", "");
+            string levelAuthorName = song.metadata.levelAuthorName
+                .Replace("<", "")
+                .Replace(">", "")
+                .Replace(":", "")
+                .Replace("/", "")
+                .Replace(@"\", "")
+                .Replace("|", "")
+                .Replace("?", "")
+                .Replace("*", "");
+
             string downloadFilePath = $@"{downloadPath}\{song.key}.zip";
             string downloadString = $"{beatSaver}{song.downloadURL}";
-            string extractPath = $@"{songsPath}\{song.hash}";
+            string extractPath = $@"{songsPath}\{song.key} ({songName} - {levelAuthorName})";
 
             if (!Directory.Exists(extractPath))
                 Directory.CreateDirectory(extractPath);
@@ -129,7 +146,7 @@ namespace BeatSaverApi
         {
             if (song.isDownloaded)
             {
-                string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name == song.hash);
+                string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.key);
 
                 if (!string.IsNullOrEmpty(directory))
                     Directory.Delete(directory, true);
