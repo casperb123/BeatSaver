@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Reflection.Metadata.Ecma335;
 
 public class BeatSaverMaps
@@ -25,8 +26,10 @@ public class BeatSaverMaps
     }
 }
 
-public class Doc
+public class Doc : INotifyPropertyChanged
 {
+    private bool downloaded;
+
     public Metadata metadata { get; set; }
     public Stats stats { get; set; }
     public string description { get; set; }
@@ -42,10 +45,24 @@ public class Doc
     public string coverURL { get; set; }
     public string realCoverURL
     {
-        get
+        get { return $"https://beatsaver.com{coverURL}"; }
+    }
+    public bool isDownloaded
+    {
+        get { return downloaded; }
+        set
         {
-            return $"https://beatsaver.com{coverURL}";
+            downloaded = value;
+            OnPropertyChanged(nameof(isDownloaded));
         }
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private void OnPropertyChanged(string prop)
+    {
+        if (!string.IsNullOrWhiteSpace(prop))
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
     }
 }
 

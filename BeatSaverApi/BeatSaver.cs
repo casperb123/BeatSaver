@@ -1,14 +1,18 @@
-﻿using Newtonsoft.Json;
+﻿using BeatSaverApi.Events;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BeatSaverApi
 {
     public class BeatSaver
     {
+        private readonly string beatSaver;
         private readonly string beatSaverApi;
         private readonly string beatSaverHotApi;
         private readonly string beatSaverRatingApi;
@@ -16,16 +20,29 @@ namespace BeatSaverApi
         private readonly string beatSaverDownloadsApi;
         private readonly string beatSaverPlaysApi;
         private readonly string beatSaverSearchApi;
+        private readonly string downloadPath;
+        private string songsPath;
 
-        public BeatSaver()
+        public event EventHandler<DownloadProgressChangedEventArgs> DownloadProgressed;
+        public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
+
+        public BeatSaver(string songsPath)
         {
-            beatSaverApi = "https://beatsaver.com/api";
+            beatSaver = "https://beatsaver.com";
+            beatSaverApi = $"{beatSaver}/api";
             beatSaverHotApi = $"{beatSaverApi}/maps/hot";
             beatSaverRatingApi = $"{beatSaverApi}/maps/rating";
             beatSaverLatestApi = $"{beatSaverApi}/maps/latest";
             beatSaverDownloadsApi = $"{beatSaverApi}/maps/downloads";
             beatSaverPlaysApi = $"{beatSaverApi}/maps/plays";
             beatSaverSearchApi = $"{beatSaverApi}/search/text";
+            this.songsPath = songsPath;
+
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            downloadPath = $@"{appData}\BeatSaverApi";
+
+            if (!Directory.Exists(downloadPath))
+                Directory.CreateDirectory(downloadPath);
         }
 
         public async Task<BeatSaverMaps> GetBeatSaverMaps(MapSort mapSort, int page = 0)
@@ -56,7 +73,14 @@ namespace BeatSaverApi
                         break;
                 }
 
-                return JsonConvert.DeserializeObject<BeatSaverMaps>(json);
+                BeatSaverMaps beatSaverMaps = JsonConvert.DeserializeObject<BeatSaverMaps>(json);
+                foreach (Doc song in beatSaverMaps.docs)
+                {
+                    foreach (string directory in Directory.GetDirectories(songsPath))
+                        song.isDownloaded = Directory.GetDirectories(songsPath).Any(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.key);
+                }
+
+                return beatSaverMaps;
             }
         }
 
@@ -67,6 +91,32 @@ namespace BeatSaverApi
                 webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
                 string json = await webClient.DownloadStringTaskAsync($"{beatSaverSearchApi}/{page}?q={query}");
                 return JsonConvert.DeserializeObject<BeatSaverMaps>(json);
+            }
+        }
+
+        public async Task DownloadSong(Doc song)
+        {
+            string downloadFilePath = $@"{downloadPath}\{song.key}.zip";
+            string downloadString = $"{beatSaver}{song.downloadURL}";
+
+            using (WebClient webClient = new WebClient())
+            {
+                webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
+                DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
+            }
+        }
+
+        public void DeleteSong(Doc song)
+        {
+            if (song.isDownloaded)
+            {
+                string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Contains(song.key));
+
+                if (!string.IsNullOrEmpty(directory))
+                    Directory.Delete(directory, true);
+
+                song.isDownloaded = false;
             }
         }
     }
