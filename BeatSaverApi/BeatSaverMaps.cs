@@ -13,6 +13,9 @@ public class BeatSaverMaps
     {
         get
         {
+            if (!nextPage.HasValue && !prevPage.HasValue)
+                return 0;
+
             return nextPage.HasValue ? (nextPage.Value - 1) : (prevPage.Value + 1);
         }
     }
