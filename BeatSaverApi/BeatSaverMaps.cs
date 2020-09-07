@@ -28,7 +28,8 @@ public class BeatSaverMaps
 
 public class Doc : INotifyPropertyChanged
 {
-    private bool downloaded;
+    private bool isDownloaded;
+    private bool isDownloading;
 
     public Metadata metadata { get; set; }
     public Stats stats { get; set; }
@@ -47,13 +48,22 @@ public class Doc : INotifyPropertyChanged
     {
         get { return $"https://beatsaver.com{coverURL}"; }
     }
-    public bool isDownloaded
+    public bool IsDownloaded
     {
-        get { return downloaded; }
+        get { return isDownloaded; }
         set
         {
-            downloaded = value;
-            OnPropertyChanged(nameof(isDownloaded));
+            isDownloaded = value;
+            OnPropertyChanged(nameof(IsDownloaded));
+        }
+    }
+    public bool IsDownloading
+    {
+        get { return isDownloading; }
+        set
+        {
+            isDownloading = value;
+            OnPropertyChanged(nameof(IsDownloading));
         }
     }
 
