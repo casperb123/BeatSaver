@@ -148,7 +148,7 @@ namespace BeatSaverApi
             }
         }
 
-        public async Task<LocalBeatMaps> GetLocalBeatmaps(string songsPath, int page = 0)
+        public async Task<LocalBeatMaps> GetLocalBeatmaps(string songsPath, int page = 0, bool loadDownloads = true)
         {
             LocalBeatMaps localBeatMaps = new LocalBeatMaps();
             List<string> songs = Directory.GetDirectories(songsPath).ToList();
@@ -191,9 +191,12 @@ namespace BeatSaverApi
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                     beatMap.ExpertPlus = true;
 
-                OnlineBeatMap songDetails = await GetBeatmap(key);
-                if (songDetails != null)
-                    beatMap.Downloads = songDetails.Stats.Downloads;
+                if (loadDownloads)
+                {
+                    OnlineBeatMap songDetails = await GetBeatmap(key);
+                    if (songDetails != null)
+                        beatMap.Downloads = songDetails.Stats.Downloads;
+                }
 
                 localBeatMaps.Maps.Add(beatMap);
             }
