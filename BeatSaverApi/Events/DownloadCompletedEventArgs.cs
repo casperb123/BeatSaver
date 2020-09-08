@@ -6,9 +6,9 @@ namespace BeatSaverApi.Events
 {
     public class DownloadCompletedEventArgs : EventArgs
     {
-        public Doc Song { get; set; }
+        public OnlineBeatMap Song { get; set; }
 
-        public DownloadCompletedEventArgs(Doc song)
+        public DownloadCompletedEventArgs(OnlineBeatMap song)
         {
             Song = song;
         }
