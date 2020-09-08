@@ -168,11 +168,16 @@ namespace BeatSaverApi
                 beatMap.Key = key;
 
                 int index = songs.IndexOf(songFolder);
-                if (index % 10 == 0)
+                if (index > 0 && index % 10 == 0)
                 {
                     beatMap.Page = index / 10;
                     localBeatMaps.LastPage++;
                 }
+
+                if (page > 0)
+                    localBeatMaps.PrevPage = page - 1;
+                if (page < localBeatMaps.LastPage)
+                    localBeatMaps.NextPage = page + 1;
 
                 DifficultyBeatmapSet difficultyBeatmapSet = beatMap.DifficultyBeatmapSets[0];
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))

@@ -17,7 +17,7 @@ namespace BeatSaverApi
             get
             {
                 if (!PrevPage.HasValue && !NextPage.HasValue)
-                    return 1;
+                    return 0;
 
                 return NextPage.HasValue ? (NextPage.Value - 1) : (PrevPage.Value + 1);
             }
