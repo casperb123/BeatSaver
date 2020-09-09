@@ -5,11 +5,11 @@ using System.Text;
 
 namespace BeatSaverApi.Events
 {
-    public class DownloadCompletedEventArgs : EventArgs
+    public class DownloadStartedEventArgs : EventArgs
     {
         public OnlineBeatmap Song { get; set; }
 
-        public DownloadCompletedEventArgs(OnlineBeatmap song)
+        public DownloadStartedEventArgs(OnlineBeatmap song)
         {
             Song = song;
         }

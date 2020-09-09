@@ -1,14 +1,15 @@
-﻿using System;
+﻿using BeatSaverApi.Entities;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
 
-namespace BeatSaverApi
+namespace BeatSaverApi.Entities
 {
-    public class LocalBeatMaps
+    public class LocalBeatmaps
     {
-        public List<LocalBeatMap> Maps { get; set; }
+        public List<LocalBeatmap> Maps { get; set; }
         public int LastPage { get; set; }
         public int? PrevPage { get; set; }
         public int? NextPage { get; set; }
@@ -32,9 +33,9 @@ namespace BeatSaverApi
         }
         public int Page { get; set; }
 
-        public LocalBeatMaps()
+        public LocalBeatmaps()
         {
-            Maps = new List<LocalBeatMap>();
+            Maps = new List<LocalBeatmap>();
         }
     }
 }

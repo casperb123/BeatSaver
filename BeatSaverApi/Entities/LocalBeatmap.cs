@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace BeatSaverApi
+namespace BeatSaverApi.Entities
 {
-    public class LocalBeatMap
+    public class LocalBeatmap
     {
         [JsonProperty("_version")]
         public string Version { get; set; }

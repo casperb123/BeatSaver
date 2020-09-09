@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BeatSaverApi
+namespace BeatSaverApi.Entities
 {
     public enum MapSort
     {
