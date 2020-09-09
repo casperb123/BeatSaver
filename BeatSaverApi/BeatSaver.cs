@@ -159,7 +159,7 @@ namespace BeatSaverApi
             {
                 for (int i = 0; i < songs.Count; i++)
                 {
-                    if ((i + 1) % 10 == 0)
+                    if (i > 0 && i % 10 == 0)
                         localBeatMaps.LastPage++;
                 }
 
