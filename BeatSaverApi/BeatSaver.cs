@@ -306,6 +306,12 @@ namespace BeatSaverApi
                 Directory.Delete(directory, true);
         }
 
+        public void DeleteSongs(ICollection<LocalBeatmap> songs)
+        {
+            foreach (LocalBeatmap song in songs)
+                DeleteSong(song);
+        }
+
         public async Task<OnlineBeatmap> GetBeatmap(string key)
         {
             try
