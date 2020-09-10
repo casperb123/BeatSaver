@@ -299,6 +299,8 @@ namespace BeatSaverApi
                     else
                         newLocalBeatmaps.PrevPage--;
                 }
+                else if (newLocalBeatmaps.PrevPage == currentPage)
+                    newLocalBeatmaps.PrevPage = currentPage - 1;
             }
 
             return newLocalBeatmaps;
