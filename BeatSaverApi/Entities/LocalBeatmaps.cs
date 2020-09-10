@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
 
 namespace BeatSaverApi.Entities
@@ -31,11 +32,18 @@ namespace BeatSaverApi.Entities
         {
             get { return LastPage + 1; }
         }
-        public int Page { get; set; }
 
         public LocalBeatmaps()
         {
             Maps = new List<LocalBeatmap>();
+        }
+
+        public LocalBeatmaps(LocalBeatmaps localBeatmaps)
+        {
+            Maps = localBeatmaps.Maps.ToList();
+            LastPage = localBeatmaps.LastPage;
+            PrevPage = localBeatmaps.PrevPage;
+            NextPage = localBeatmaps.NextPage;
         }
     }
 }
