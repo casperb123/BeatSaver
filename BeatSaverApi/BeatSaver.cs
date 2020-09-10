@@ -213,13 +213,17 @@ namespace BeatSaverApi
         {
             LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
 
-            if (newLocalBeatmaps.CurrentPage + 1 <= newLocalBeatmaps.LastPage)
+            if (newLocalBeatmaps.NextPage != null)
             {
-                newLocalBeatmaps.PrevPage = newLocalBeatmaps.CurrentPage;
-                if (newLocalBeatmaps.CurrentPage + 1 == newLocalBeatmaps.LastPage)
+                if (newLocalBeatmaps.PrevPage is null)
+                    newLocalBeatmaps.PrevPage = 0;
+                else
+                    newLocalBeatmaps.PrevPage++;
+
+                if (newLocalBeatmaps.NextPage == newLocalBeatmaps.LastPage)
                     newLocalBeatmaps.NextPage = null;
                 else
-                    newLocalBeatmaps.NextPage = newLocalBeatmaps.CurrentPage + 1;
+                    newLocalBeatmaps.NextPage++;
             }
 
             return newLocalBeatmaps;
@@ -229,13 +233,17 @@ namespace BeatSaverApi
         {
             LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
 
-            if (newLocalBeatmaps.CurrentPage - 1 >= 0)
+            if (newLocalBeatmaps.PrevPage != null)
             {
-                newLocalBeatmaps.NextPage = newLocalBeatmaps.CurrentPage;
-                if (newLocalBeatmaps.CurrentPage - 1 == 0)
+                if (newLocalBeatmaps.NextPage is null)
+                    newLocalBeatmaps.NextPage = newLocalBeatmaps.LastPage;
+                else
+                    newLocalBeatmaps.NextPage--;
+
+                if (newLocalBeatmaps.PrevPage == 0)
                     newLocalBeatmaps.PrevPage = null;
                 else
-                    newLocalBeatmaps.PrevPage = newLocalBeatmaps.CurrentPage - 1;
+                    newLocalBeatmaps.PrevPage--;
             }
 
             return newLocalBeatmaps;
@@ -261,109 +269,40 @@ namespace BeatSaverApi
             return newLocalBeatmaps;
         }
 
-        //public async Task<LocalBeatmaps> GetLocalBeatmaps(string songsPath, int page = -1)
-        //{
-        //    LocalBeatmaps localBeatMaps = new LocalBeatmaps();
-        //    List<string> songs = Directory.GetDirectories(songsPath).ToList();
+        public LocalBeatmaps RefreshPages(LocalBeatmaps localBeatmaps)
+        {
+            LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
+            int currentPage = 0;
 
-        //    if (page > -1)
-        //    {
-        //        for (int i = 0; i < songs.Count; i++)
-        //        {
-        //            if (i > 0 && i % 10 == 0)
-        //                localBeatMaps.LastPage++;
-        //        }
+            foreach (LocalBeatmap localBeatmap in newLocalBeatmaps.Maps)
+            {
+                int index = newLocalBeatmaps.Maps.IndexOf(localBeatmap);
+                if (index > 0 && index % 10 == 0)
+                    currentPage++;
 
-        //        if (page > localBeatMaps.LastPage)
-        //            page = localBeatMaps.LastPage;
-        //        if (page > 0)
-        //            localBeatMaps.PrevPage = page - 1;
-        //        if (page < localBeatMaps.LastPage)
-        //            localBeatMaps.NextPage = page + 1;
+                localBeatmap.Page = currentPage;
+            }
 
-        //        int startIndex = 0;
-        //        int endIndex = songs.Count;
+            newLocalBeatmaps.LastPage = currentPage;
+            if (currentPage == 0)
+            {
+                newLocalBeatmaps.NextPage = null;
+                newLocalBeatmaps.PrevPage = null;
+            }
+            else
+            {
+                if (newLocalBeatmaps.NextPage > currentPage)
+                {
+                    newLocalBeatmaps.NextPage = currentPage;
+                    if (newLocalBeatmaps.PrevPage - 1 < 0)
+                        newLocalBeatmaps.PrevPage = null;
+                    else
+                        newLocalBeatmaps.PrevPage--;
+                }
+            }
 
-        //        if (page > 0)
-        //            startIndex = page * 10;
-
-        //        if (startIndex + 10 >= songs.Count)
-        //            endIndex = songs.Count;
-        //        else
-        //            endIndex = startIndex + 10;
-
-        //        for (int i = startIndex; i < endIndex; i++)
-        //        {
-        //            string songFolder = songs[i];
-        //            string infoFile = $@"{songFolder}\info.dat";
-        //            string key = new DirectoryInfo(songFolder).Name.Split(" ")[0];
-
-        //            if (!File.Exists(infoFile))
-        //                continue;
-
-        //            string json = await File.ReadAllTextAsync(infoFile);
-        //            LocalBeatmap beatMap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
-
-        //            beatMap.CoverImagePath = $@"{songFolder}\{beatMap.CoverImageFilename}";
-        //            beatMap.Key = key;
-
-        //            DifficultyBeatmapSet difficultyBeatmapSet = beatMap.DifficultyBeatmapSets[0];
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
-        //                beatMap.Easy = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Normal"))
-        //                beatMap.Normal = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Hard"))
-        //                beatMap.Hard = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Expert"))
-        //                beatMap.Expert = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
-        //                beatMap.ExpertPlus = true;
-
-        //            OnlineBeatmap songDetails = await GetBeatmap(key);
-        //            if (songDetails != null)
-        //                beatMap.Downloads = songDetails.Stats.Downloads;
-
-        //            localBeatMaps.Maps.Add(beatMap);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        foreach (string songFolder in songs)
-        //        {
-        //            string infoFile = $@"{songFolder}\info.dat";
-        //            string key = new DirectoryInfo(songFolder).Name.Split(" ")[0];
-
-        //            if (!File.Exists(infoFile))
-        //                continue;
-
-        //            string json = await File.ReadAllTextAsync(infoFile);
-        //            LocalBeatmap beatMap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
-
-        //            beatMap.CoverImagePath = $@"{songFolder}\{beatMap.CoverImageFilename}";
-        //            beatMap.Key = key;
-
-        //            DifficultyBeatmapSet difficultyBeatmapSet = beatMap.DifficultyBeatmapSets[0];
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
-        //                beatMap.Easy = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Normal"))
-        //                beatMap.Normal = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Hard"))
-        //                beatMap.Hard = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Expert"))
-        //                beatMap.Expert = true;
-        //            if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
-        //                beatMap.ExpertPlus = true;
-
-        //            OnlineBeatmap songDetails = await GetBeatmap(key);
-        //            if (songDetails != null)
-        //                beatMap.Downloads = songDetails.Stats.Downloads;
-
-        //            localBeatMaps.Maps.Add(beatMap);
-        //        }
-        //    }
-
-        //    return localBeatMaps;
-        //}
+            return newLocalBeatmaps;
+        }
 
         public async Task DownloadSong(OnlineBeatmap song)
         {
