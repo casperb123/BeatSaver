@@ -119,7 +119,7 @@ namespace BeatSaverApi
             }
             catch (Exception)
             {
-                throw;
+                return null;
             }
         }
 
@@ -146,11 +146,11 @@ namespace BeatSaverApi
             }
             catch (Exception)
             {
-                throw;
+                return null;
             }
         }
 
-        public async Task<LocalBeatmaps> GetLocalBeatmaps(string songsPath, int page = -1, bool loadDownloads = true)
+        public async Task<LocalBeatmaps> GetLocalBeatmaps(string songsPath, int page = -1)
         {
             LocalBeatmaps localBeatMaps = new LocalBeatmaps();
             List<string> songs = Directory.GetDirectories(songsPath).ToList();
@@ -208,12 +208,9 @@ namespace BeatSaverApi
                     if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                         beatMap.ExpertPlus = true;
 
-                    if (loadDownloads)
-                    {
-                        OnlineBeatmap songDetails = await GetBeatmap(key);
-                        if (songDetails != null)
-                            beatMap.Downloads = songDetails.Stats.Downloads;
-                    }
+                    OnlineBeatmap songDetails = await GetBeatmap(key);
+                    if (songDetails != null)
+                        beatMap.Downloads = songDetails.Stats.Downloads;
 
                     localBeatMaps.Maps.Add(beatMap);
                 }
@@ -246,12 +243,9 @@ namespace BeatSaverApi
                     if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                         beatMap.ExpertPlus = true;
 
-                    if (loadDownloads)
-                    {
-                        OnlineBeatmap songDetails = await GetBeatmap(key);
-                        if (songDetails != null)
-                            beatMap.Downloads = songDetails.Stats.Downloads;
-                    }
+                    OnlineBeatmap songDetails = await GetBeatmap(key);
+                    if (songDetails != null)
+                        beatMap.Downloads = songDetails.Stats.Downloads;
 
                     localBeatMaps.Maps.Add(beatMap);
                 }
