@@ -209,67 +209,27 @@ namespace BeatSaverApi
             return localBeatMaps;
         }
 
-        public LocalBeatmaps LocalNextPage(LocalBeatmaps localBeatmaps)
+        public LocalBeatmaps ChangeLocalPage(LocalBeatmaps localBeatmaps, int page)
         {
             LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
 
-            if (newLocalBeatmaps.NextPage != null)
+            if (page >= 0 && page <= newLocalBeatmaps.LastPage)
             {
-                if (newLocalBeatmaps.PrevPage is null)
-                    newLocalBeatmaps.PrevPage = 0;
-                else
-                    newLocalBeatmaps.PrevPage++;
-
-                if (newLocalBeatmaps.NextPage == newLocalBeatmaps.LastPage)
-                    newLocalBeatmaps.NextPage = null;
-                else
-                    newLocalBeatmaps.NextPage++;
-            }
-
-            return newLocalBeatmaps;
-        }
-
-        public LocalBeatmaps LocalPreviousPage(LocalBeatmaps localBeatmaps)
-        {
-            LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
-
-            if (newLocalBeatmaps.PrevPage != null)
-            {
-                if (newLocalBeatmaps.NextPage is null)
-                    newLocalBeatmaps.NextPage = newLocalBeatmaps.LastPage;
-                else
-                    newLocalBeatmaps.NextPage--;
-
-                if (newLocalBeatmaps.PrevPage == 0)
+                if (page == 0)
                     newLocalBeatmaps.PrevPage = null;
                 else
-                    newLocalBeatmaps.PrevPage--;
+                    newLocalBeatmaps.PrevPage = page - 1;
+
+                if (page == newLocalBeatmaps.LastPage)
+                    newLocalBeatmaps.NextPage = null;
+                else
+                    newLocalBeatmaps.NextPage = page + 1;
             }
 
             return newLocalBeatmaps;
         }
 
-        public LocalBeatmaps LocalFirstPage(LocalBeatmaps localBeatmaps)
-        {
-            LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
-
-            newLocalBeatmaps.PrevPage = null;
-            newLocalBeatmaps.NextPage = 1;
-
-            return newLocalBeatmaps;
-        }
-
-        public LocalBeatmaps LocalLastPage(LocalBeatmaps localBeatmaps)
-        {
-            LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
-
-            newLocalBeatmaps.NextPage = null;
-            newLocalBeatmaps.PrevPage = newLocalBeatmaps.LastPage - 1;
-
-            return newLocalBeatmaps;
-        }
-
-        public LocalBeatmaps RefreshPages(LocalBeatmaps localBeatmaps)
+        public LocalBeatmaps RefreshLocalPages(LocalBeatmaps localBeatmaps)
         {
             LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
             int currentPage = 0;
