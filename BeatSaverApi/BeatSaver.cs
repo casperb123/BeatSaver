@@ -225,6 +225,24 @@ namespace BeatSaverApi
                 else
                     newLocalBeatmaps.NextPage = page + 1;
             }
+            else if (page <= 0)
+            {
+                page = 0;
+                newLocalBeatmaps.PrevPage = null;
+                if (page + 1 <= newLocalBeatmaps.LastPage)
+                    newLocalBeatmaps.NextPage = page + 1;
+                else
+                    newLocalBeatmaps.NextPage = null;
+            }
+            else if (page >= newLocalBeatmaps.LastPage)
+            {
+                page = newLocalBeatmaps.LastPage;
+                newLocalBeatmaps.NextPage = null;
+                if (page - 1 >= 0)
+                    newLocalBeatmaps.PrevPage = page - 1;
+                else
+                    newLocalBeatmaps.PrevPage = null;
+            }
 
             return newLocalBeatmaps;
         }
