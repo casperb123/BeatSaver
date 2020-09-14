@@ -246,19 +246,19 @@ namespace BeatSaverApi
         public LocalBeatmaps RefreshLocalPages(LocalBeatmaps localBeatmaps)
         {
             LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
-            int currentPage = 0;
+            int lastPage = 0;
 
             foreach (LocalBeatmap localBeatmap in newLocalBeatmaps.Maps)
             {
                 int index = newLocalBeatmaps.Maps.IndexOf(localBeatmap);
                 if (index > 0 && index % 10 == 0)
-                    currentPage++;
+                    lastPage++;
 
-                localBeatmap.Page = currentPage;
+                localBeatmap.Page = lastPage;
             }
 
-            newLocalBeatmaps.LastPage = currentPage;
-            if (currentPage == 0)
+            newLocalBeatmaps.LastPage = lastPage;
+            if (lastPage == 0)
             {
                 newLocalBeatmaps.NextPage = null;
                 newLocalBeatmaps.PrevPage = null;
@@ -267,22 +267,31 @@ namespace BeatSaverApi
             {
                 if (newLocalBeatmaps.NextPage is null && newLocalBeatmaps.PrevPage is null)
                 {
-                    if (currentPage >= 1)
+                    if (lastPage >= 1)
                         newLocalBeatmaps.NextPage = 1;
                 }
                 else
                 {
-                    if (newLocalBeatmaps.NextPage != null)
+                    if (newLocalBeatmaps.NextPage is null)
                     {
-                        if (newLocalBeatmaps.NextPage > currentPage)
-                            newLocalBeatmaps.NextPage = null;
+                        if (newLocalBeatmaps.PrevPage < lastPage)
+                        {
+                            if (newLocalBeatmaps.PrevPage + 2 <= lastPage)
+                                newLocalBeatmaps.NextPage = newLocalBeatmaps.PrevPage + 2;
+                            else
+                                newLocalBeatmaps.PrevPage = lastPage - 1;
+                        }
+                        else
+                            newLocalBeatmaps.PrevPage = lastPage - 1;
                     }
                     else
                     {
-                        if (currentPage - 1 >= 0)
-                            newLocalBeatmaps.PrevPage = currentPage - 1;
-                        else
-                            newLocalBeatmaps.PrevPage = null;
+                        if (newLocalBeatmaps.NextPage > lastPage)
+                        {
+                            newLocalBeatmaps.NextPage = null;
+                            if (lastPage - 1 >= 0)
+                                newLocalBeatmaps.PrevPage = lastPage - 1;
+                        }
                     }
                 }
             }
