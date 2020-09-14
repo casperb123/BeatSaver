@@ -152,20 +152,25 @@ namespace BeatSaverApi
             }
         }
 
-        public async Task<LocalBeatmaps> GetLocalBeatmaps(string songsPath)
+        public async Task<LocalBeatmaps> GetLocalBeatmaps(string songsPath, LocalBeatmaps cachedLocalBeatmaps = null)
         {
-            LocalBeatmaps localBeatMaps = new LocalBeatmaps();
+            LocalBeatmaps localBeatmaps = cachedLocalBeatmaps is null ? new LocalBeatmaps() : new LocalBeatmaps(cachedLocalBeatmaps);
             List<string> songs = Directory.GetDirectories(songsPath).ToList();
-            int currentPage = 0;
+            foreach (LocalBeatmap beatmap in localBeatmaps.Maps.ToList())
+            {
+                string song = songs.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == beatmap.Key);
+                if (song != null)
+                    songs.Remove(song);
+            }
 
             for (int i = 0; i < songs.Count; i++)
             {
                 if (i > 0 && i % 10 == 0)
-                    localBeatMaps.LastPage++;
+                    localBeatmaps.LastPage++;
             }
 
-            if (localBeatMaps.LastPage > 0)
-                localBeatMaps.NextPage = 1;
+            if (localBeatmaps.LastPage > 0)
+                localBeatmaps.NextPage = 1;
 
             foreach (string songFolder in songs)
             {
@@ -193,20 +198,14 @@ namespace BeatSaverApi
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                     beatMap.ExpertPlus = true;
 
-                int index = songs.IndexOf(songFolder);
-                if (index > 0 && index % 10 == 0)
-                    currentPage++;
-
-                beatMap.Page = currentPage;
-
                 OnlineBeatmap songDetails = await GetBeatmap(key);
                 if (songDetails != null)
                     beatMap.Downloads = songDetails.Stats.Downloads;
 
-                localBeatMaps.Maps.Add(beatMap);
+                localBeatmaps.Maps.Add(beatMap);
             }
 
-            return localBeatMaps;
+            return RefreshLocalPages(localBeatmaps);
         }
 
         public LocalBeatmaps ChangeLocalPage(LocalBeatmaps localBeatmaps, int page)
