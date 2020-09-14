@@ -169,9 +169,6 @@ namespace BeatSaverApi
                     localBeatmaps.LastPage++;
             }
 
-            if (localBeatmaps.LastPage > 0)
-                localBeatmaps.NextPage = 1;
-
             foreach (string songFolder in songs)
             {
                 string infoFile = $@"{songFolder}\info.dat";
@@ -268,16 +265,26 @@ namespace BeatSaverApi
             }
             else
             {
-                if (newLocalBeatmaps.NextPage > currentPage)
+                if (newLocalBeatmaps.NextPage is null && newLocalBeatmaps.PrevPage is null)
                 {
-                    newLocalBeatmaps.NextPage = currentPage;
-                    if (newLocalBeatmaps.PrevPage - 1 < 0)
-                        newLocalBeatmaps.PrevPage = null;
-                    else
-                        newLocalBeatmaps.PrevPage--;
+                    if (currentPage >= 1)
+                        newLocalBeatmaps.NextPage = 1;
                 }
-                else if (newLocalBeatmaps.PrevPage == currentPage)
-                    newLocalBeatmaps.PrevPage = currentPage - 1;
+                else
+                {
+                    if (newLocalBeatmaps.NextPage != null)
+                    {
+                        if (newLocalBeatmaps.NextPage > currentPage)
+                            newLocalBeatmaps.NextPage = null;
+                    }
+                    else
+                    {
+                        if (currentPage - 1 >= 0)
+                            newLocalBeatmaps.PrevPage = currentPage - 1;
+                        else
+                            newLocalBeatmaps.PrevPage = null;
+                    }
+                }
             }
 
             return newLocalBeatmaps;
