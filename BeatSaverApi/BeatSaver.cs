@@ -200,7 +200,7 @@ namespace BeatSaverApi
 
                 _ = Task.Run(async () =>
                 {
-                    List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(songFolder);
+                    List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(songFolder, beatmap.DifficultyBeatmapSets);
                     beatmap.Details = localBeatmapDetails;
                 });
 
@@ -217,16 +217,19 @@ namespace BeatSaverApi
             return RefreshLocalPages(localBeatmaps);
         }
 
-        private async Task<List<LocalBeatmapDetails>> GetLocalBeatmapDetails(string songFolder)
+        private async Task<List<LocalBeatmapDetails>> GetLocalBeatmapDetails(string songFolder, DifficultyBeatmapSet[] beatmapSets)
         {
             List<LocalBeatmapDetails> localBeatmapDetails = new List<LocalBeatmapDetails>();
 
-            IEnumerable<string> files = Directory.GetFiles(songFolder, "*.dat").Where(x => Path.GetFileName(x) != "info.dat");
-            foreach (string file in files)
+            foreach (DifficultyBeatmapSet difficultyBeatmapSet in beatmapSets)
             {
-                string json = await File.ReadAllTextAsync(file);
-                LocalBeatmapDetails beatmapDetails = JsonConvert.DeserializeObject<LocalBeatmapDetails>(json);
-                localBeatmapDetails.Add(beatmapDetails);
+                foreach (DifficultyBeatmap difficultyBeatmap in difficultyBeatmapSet.DifficultyBeatmaps)
+                {
+                    string filePath = $@"{songFolder}\{difficultyBeatmap.BeatmapFilename}";
+                    string json = await File.ReadAllTextAsync(filePath);
+                    LocalBeatmapDetails beatmapDetails = JsonConvert.DeserializeObject<LocalBeatmapDetails>(json);
+                    localBeatmapDetails.Add(beatmapDetails);
+                }
             }
 
             return localBeatmapDetails;
