@@ -223,13 +223,18 @@ namespace BeatSaverApi
 
             foreach (DifficultyBeatmapSet difficultyBeatmapSet in beatmapSets)
             {
+                LocalBeatmapDetails beatmapDetails = new LocalBeatmapDetails(difficultyBeatmapSet.BeatmapCharacteristicName);
+
                 foreach (DifficultyBeatmap difficultyBeatmap in difficultyBeatmapSet.DifficultyBeatmaps)
                 {
                     string filePath = $@"{songFolder}\{difficultyBeatmap.BeatmapFilename}";
                     string json = await File.ReadAllTextAsync(filePath);
-                    LocalBeatmapDetails beatmapDetails = JsonConvert.DeserializeObject<LocalBeatmapDetails>(json);
-                    localBeatmapDetails.Add(beatmapDetails);
+                    LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
+                    beatmapDetail.Difficulty = difficultyBeatmap.Difficulty;
+                    beatmapDetails.BeatmapDetails.Add(beatmapDetail);
                 }
+
+                localBeatmapDetails.Add(beatmapDetails);
             }
 
             return localBeatmapDetails;
