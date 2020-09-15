@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace BeatSaverApi.Entities
 {
@@ -27,15 +28,15 @@ namespace BeatSaverApi.Entities
         [JsonProperty("_levelAuthorName")]
         public string LevelAuthorName { get; set; }
         [JsonProperty("_beatsPerMinute")]
-        public long BeatsPerMinute { get; set; }
+        public float BeatsPerMinute { get; set; }
         [JsonProperty("_shuffle")]
-        public long Shuffle { get; set; }
+        public float Shuffle { get; set; }
         [JsonProperty("_shufflePeriod")]
         public double ShufflePeriod { get; set; }
         [JsonProperty("_previewStartTime")]
         public double PreviewStartTime { get; set; }
         [JsonProperty("_previewDuration")]
-        public long PreviewDuration { get; set; }
+        public float PreviewDuration { get; set; }
         [JsonProperty("_songFilename")]
         public string SongFilename { get; set; }
         [JsonProperty("_coverImageFilename")]
@@ -43,16 +44,18 @@ namespace BeatSaverApi.Entities
         [JsonProperty("_environmentName")]
         public string EnvironmentName { get; set; }
         [JsonProperty("_songTimeOffset")]
-        public long SongTimeOffset { get; set; }
+        public float SongTimeOffset { get; set; }
         [JsonProperty("_customData")]
         public InfoCustomData CustomData { get; set; }
         [JsonProperty("_difficultyBeatmapSets")]
         public DifficultyBeatmapSet[] DifficultyBeatmapSets { get; set; }
+
         public bool Easy { get; set; }
         public bool Normal { get; set; }
         public bool Hard { get; set; }
         public bool Expert { get; set; }
         public bool ExpertPlus { get; set; }
+        public List<LocalBeatmapDetails> Details { get; set; }
 
         public string Key { get; set; }
         public string CoverImagePath { get; set; }
@@ -62,7 +65,16 @@ namespace BeatSaverApi.Entities
     public class InfoCustomData
     {
         [JsonProperty("_contributors")]
-        public object[] Contributors { get; set; }
+        public Contributor[] Contributors { get; set; }
+    }
+    public class Contributor
+    {
+        [JsonProperty("_role")]
+        public string Role;
+        [JsonProperty("_name")]
+        public string Name;
+        [JsonProperty("_iconPath")]
+        public string IconPath;
     }
     public class DifficultyBeatmapSet
     {
@@ -76,11 +88,11 @@ namespace BeatSaverApi.Entities
         [JsonProperty("_difficulty")]
         public string Difficulty { get; set; }
         [JsonProperty("_difficultyRank")]
-        public long DifficultyRank { get; set; }
+        public float DifficultyRank { get; set; }
         [JsonProperty("_beatmapFilename")]
         public string BeatmapFilename { get; set; }
         [JsonProperty("_noteJumpMovementSpeed")]
-        public long NoteJumpMovementSpeed { get; set; }
+        public float NoteJumpMovementSpeed { get; set; }
         [JsonProperty("_noteJumpStartBeatOffset")]
         public double NoteJumpStartBeatOffset { get; set; }
         [JsonProperty("_customData")]
@@ -91,9 +103,9 @@ namespace BeatSaverApi.Entities
         [JsonProperty("_difficultyLabel")]
         public string DifficultyLabel { get; set; }
         [JsonProperty("_editorOffset")]
-        public long EditorOffset { get; set; }
+        public float EditorOffset { get; set; }
         [JsonProperty("_editorOldOffset")]
-        public long EditorOldOffset { get; set; }
+        public float EditorOldOffset { get; set; }
         [JsonProperty("_warnings")]
         public string[] Warnings { get; set; }
         [JsonProperty("_information")]

@@ -3,14 +3,10 @@ using BeatSaverApi.Events;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BeatSaverApi
@@ -28,7 +24,7 @@ namespace BeatSaverApi
         private readonly string beatSaverDetailsApi;
         private readonly string downloadPath;
         private readonly string songsPath;
-        private readonly List<string> excludedCharacters;
+        private readonly string[] excludedCharacters;
 
         public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
         public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
@@ -46,13 +42,20 @@ namespace BeatSaverApi
             beatSaverDetailsApi = $"{beatSaverApi}/maps/detail";
             this.songsPath = songsPath;
 
+            //string folder = $@"{songsPath}\b6cb (Bad Apple - Core Pee)";
+            //string expertPlus = $@"{folder}\ExpertPlusStandard.dat";
+            //string json = File.ReadAllText(expertPlus);
+            //byte[] bytes = MessagePackSerializer.ConvertFromJson(json);
+            //LocalBeatmapDetails localBeatmapDetails = MessagePackSerializer.Deserialize<LocalBeatmapDetails>(bytes);
+            //LocalBeatmapDetails localBeatmapDetails = JsonConvert.DeserializeObject<LocalBeatmapDetails>(json);
+
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             downloadPath = $@"{appData}\BeatSaverApi";
 
             if (!Directory.Exists(downloadPath))
                 Directory.CreateDirectory(downloadPath);
 
-            excludedCharacters = new List<string>
+            excludedCharacters = new string[]
             {
                 "<",
                 ">",
@@ -178,31 +181,55 @@ namespace BeatSaverApi
                     continue;
 
                 string json = await File.ReadAllTextAsync(infoFile);
-                LocalBeatmap beatMap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
+                LocalBeatmap beatmap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
 
-                beatMap.CoverImagePath = $@"{songFolder}\{beatMap.CoverImageFilename}";
-                beatMap.Key = key;
+                beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
+                beatmap.Key = key;
 
-                DifficultyBeatmapSet difficultyBeatmapSet = beatMap.DifficultyBeatmapSets[0];
+                DifficultyBeatmapSet difficultyBeatmapSet = beatmap.DifficultyBeatmapSets[0];
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
-                    beatMap.Easy = true;
+                    beatmap.Easy = true;
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Normal"))
-                    beatMap.Normal = true;
+                    beatmap.Normal = true;
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Hard"))
-                    beatMap.Hard = true;
+                    beatmap.Hard = true;
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Expert"))
-                    beatMap.Expert = true;
+                    beatmap.Expert = true;
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
-                    beatMap.ExpertPlus = true;
+                    beatmap.ExpertPlus = true;
 
-                OnlineBeatmap songDetails = await GetBeatmap(key);
-                if (songDetails != null)
-                    beatMap.Downloads = songDetails.Stats.Downloads;
+                _ = Task.Run(async () =>
+                {
+                    List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(songFolder);
+                    beatmap.Details = localBeatmapDetails;
+                });
 
-                localBeatmaps.Maps.Add(beatMap);
+                //_ = Task.Run(async () =>
+                //{
+                //    OnlineBeatmap songDetails = await GetBeatmap(key);
+                //    if (songDetails != null)
+                //        beatmap.Downloads = songDetails.Stats.Downloads;
+                //});
+
+                localBeatmaps.Maps.Add(beatmap);
             }
 
             return RefreshLocalPages(localBeatmaps);
+        }
+
+        private async Task<List<LocalBeatmapDetails>> GetLocalBeatmapDetails(string songFolder)
+        {
+            List<LocalBeatmapDetails> localBeatmapDetails = new List<LocalBeatmapDetails>();
+
+            IEnumerable<string> files = Directory.GetFiles(songFolder, "*.dat").Where(x => Path.GetFileName(x) != "info.dat");
+            foreach (string file in files)
+            {
+                string json = await File.ReadAllTextAsync(file);
+                LocalBeatmapDetails beatmapDetails = JsonConvert.DeserializeObject<LocalBeatmapDetails>(json);
+                localBeatmapDetails.Add(beatmapDetails);
+            }
+
+            return localBeatmapDetails;
         }
 
         public LocalBeatmaps ChangeLocalPage(LocalBeatmaps localBeatmaps, int page)
