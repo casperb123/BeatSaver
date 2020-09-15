@@ -230,7 +230,7 @@ namespace BeatSaverApi
                     string filePath = $@"{songFolder}\{difficultyBeatmap.BeatmapFilename}";
                     string json = await File.ReadAllTextAsync(filePath);
                     LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
-                    beatmapDetail.Difficulty = difficultyBeatmap.Difficulty;
+                    beatmapDetail.Difficulty = difficultyBeatmap;
                     beatmapDetails.BeatmapDetails.Add(beatmapDetail);
                 }
 
