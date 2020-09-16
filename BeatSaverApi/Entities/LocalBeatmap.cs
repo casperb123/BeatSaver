@@ -1,18 +1,32 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace BeatSaverApi.Entities
 {
-    public class LocalBeatmap
+    public class LocalBeatmap : INotifyPropertyChanged
     {
         private string songAuthorName;
+        private string songSubName;
+        private List<LocalBeatmapDetails> details;
+        private OnlineBeatmap onlineBeatmap;
 
         [JsonProperty("_version")]
         public string Version { get; set; }
         [JsonProperty("_songName")]
         public string SongName { get; set; }
         [JsonProperty("_songSubName")]
-        public string SongSubName { get; set; }
+        public string SongSubName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(songSubName))
+                    return null;
+                else
+                    return songSubName;
+            }
+            set { songSubName = value; }
+        }
         [JsonProperty("_songAuthorName")]
         public string SongAuthorName
         {
@@ -55,12 +69,38 @@ namespace BeatSaverApi.Entities
         public bool Hard { get; set; }
         public bool Expert { get; set; }
         public bool ExpertPlus { get; set; }
-        public List<LocalBeatmapDetails> Details { get; set; }
+        public List<LocalBeatmapDetails> Details
+        {
+            get { return details; }
+            set
+            {
+                details = value;
+                OnPropertyChanged(nameof(Details));
+            }
+        }
 
         public string Key { get; set; }
         public string CoverImagePath { get; set; }
         public int Page { get; set; }
+
+        public OnlineBeatmap OnlineBeatmap
+        {
+            get { return onlineBeatmap; }
+            set
+            {
+                onlineBeatmap = value;
+                OnPropertyChanged(nameof(OnlineBeatmap));
+            }
+        }
         public int? Downloads { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string prop)
+        {
+            if (!string.IsNullOrWhiteSpace(prop))
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
     }
     public class InfoCustomData
     {

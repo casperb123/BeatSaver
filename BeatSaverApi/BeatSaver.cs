@@ -198,18 +198,13 @@ namespace BeatSaverApi
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                     beatmap.ExpertPlus = true;
 
+                _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(key));
+
                 _ = Task.Run(async () =>
                 {
                     List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(songFolder, beatmap.DifficultyBeatmapSets);
                     beatmap.Details = localBeatmapDetails;
                 });
-
-                //_ = Task.Run(async () =>
-                //{
-                //    OnlineBeatmap songDetails = await GetBeatmap(key);
-                //    if (songDetails != null)
-                //        beatmap.Downloads = songDetails.Stats.Downloads;
-                //});
 
                 localBeatmaps.Maps.Add(beatmap);
             }

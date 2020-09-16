@@ -21,7 +21,7 @@ namespace BeatSaverApi.Entities
     public class Customdata
     {
         [JsonProperty("_time")]
-        public int Time { get; set; }
+        public float Time { get; set; }
         [JsonProperty("_BPMChanges")]
         public object[] BPMChanges { get; set; }
         [JsonProperty("_bookmarks")]
