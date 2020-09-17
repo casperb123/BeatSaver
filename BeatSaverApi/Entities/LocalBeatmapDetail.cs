@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Linq;
 
 namespace BeatSaverApi.Entities
 {
@@ -16,6 +17,23 @@ namespace BeatSaverApi.Entities
         public Notes[] Notes { get; set; }
         [JsonProperty("_obstacles")]
         public Obstacles[] Obstacles { get; set; }
+
+        public int NotesCount
+        {
+            get { return Notes.Where(x => x.Type != 3).Count(); }
+        }
+        public int BombsCount
+        {
+            get { return Notes.Where(x => x.Type == 3).Count(); }
+        }
+        public int ObstaclesCount
+        {
+            get { return Obstacles.Length; }
+        }
+        public float Duration
+        {
+            get { return Notes[Notes.Length - 1].Time; }
+        }
     }
 
     public class Customdata
