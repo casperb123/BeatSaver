@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BeatSaverApi.Entities
+﻿namespace BeatSaverApi.Entities
 {
     public enum MapSort
     {

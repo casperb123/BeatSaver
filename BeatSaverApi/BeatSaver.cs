@@ -23,8 +23,9 @@ namespace BeatSaverApi
         private readonly string beatSaverSearchApi;
         private readonly string beatSaverDetailsApi;
         private readonly string downloadPath;
-        private readonly string songsPath;
         private readonly string[] excludedCharacters;
+
+        public string SongsPath;
 
         public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
         public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
@@ -40,14 +41,7 @@ namespace BeatSaverApi
             beatSaverPlaysApi = $"{beatSaverApi}/maps/plays";
             beatSaverSearchApi = $"{beatSaverApi}/search/text";
             beatSaverDetailsApi = $"{beatSaverApi}/maps/detail";
-            this.songsPath = songsPath;
-
-            //string folder = $@"{songsPath}\b6cb (Bad Apple - Core Pee)";
-            //string expertPlus = $@"{folder}\ExpertPlusStandard.dat";
-            //string json = File.ReadAllText(expertPlus);
-            //byte[] bytes = MessagePackSerializer.ConvertFromJson(json);
-            //LocalBeatmapDetails localBeatmapDetails = MessagePackSerializer.Deserialize<LocalBeatmapDetails>(bytes);
-            //LocalBeatmapDetails localBeatmapDetails = JsonConvert.DeserializeObject<LocalBeatmapDetails>(json);
+            SongsPath = songsPath;
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             downloadPath = $@"{appData}\BeatSaverApi";
@@ -113,10 +107,10 @@ namespace BeatSaverApi
                     }
 
                     OnlineBeatmaps beatSaverMaps = JsonConvert.DeserializeObject<OnlineBeatmaps>(json);
-                    string[] songsDownloaded = Directory.GetDirectories(songsPath);
+                    string[] songsDownloaded = Directory.GetDirectories(SongsPath);
 
                     foreach (OnlineBeatmap song in beatSaverMaps.Maps)
-                        foreach (string directory in Directory.GetDirectories(songsPath))
+                        foreach (string directory in Directory.GetDirectories(SongsPath))
                             song.IsDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
 
                     return beatSaverMaps;
@@ -138,11 +132,11 @@ namespace BeatSaverApi
                     string json = await webClient.DownloadStringTaskAsync($"{beatSaverSearchApi}/{page}?q={query}");
 
                     OnlineBeatmaps beatSaverMaps = JsonConvert.DeserializeObject<OnlineBeatmaps>(json);
-                    string[] songsDownloaded = Directory.GetDirectories(songsPath);
+                    string[] songsDownloaded = Directory.GetDirectories(SongsPath);
 
                     foreach (OnlineBeatmap song in beatSaverMaps.Maps)
                     {
-                        foreach (string directory in Directory.GetDirectories(songsPath))
+                        foreach (string directory in Directory.GetDirectories(SongsPath))
                             song.IsDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name == song.Hash);
                     }
 
@@ -155,10 +149,10 @@ namespace BeatSaverApi
             }
         }
 
-        public async Task<LocalBeatmaps> GetLocalBeatmaps(string songsPath, LocalBeatmaps cachedLocalBeatmaps = null)
+        public async Task<LocalBeatmaps> GetLocalBeatmaps(LocalBeatmaps cachedLocalBeatmaps = null)
         {
             LocalBeatmaps localBeatmaps = cachedLocalBeatmaps is null ? new LocalBeatmaps() : new LocalBeatmaps(cachedLocalBeatmaps);
-            List<string> songs = Directory.GetDirectories(songsPath).ToList();
+            List<string> songs = Directory.GetDirectories(SongsPath).ToList();
             foreach (LocalBeatmap beatmap in localBeatmaps.Maps.ToList())
             {
                 string song = songs.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == beatmap.Key);
@@ -225,7 +219,7 @@ namespace BeatSaverApi
                     string filePath = $@"{songFolder}\{difficultyBeatmap.BeatmapFilename}";
                     string json = await File.ReadAllTextAsync(filePath);
                     LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
-                    beatmapDetail.Difficulty = difficultyBeatmap;
+                    beatmapDetail.DifficultyBeatmap = difficultyBeatmap;
                     beatmapDetails.BeatmapDetails.Add(beatmapDetail);
                 }
 
@@ -342,7 +336,7 @@ namespace BeatSaverApi
 
             string downloadFilePath = $@"{downloadPath}\{song.Key}.zip";
             string downloadString = $"{beatSaver}{song.DownloadURL}";
-            string extractPath = $@"{songsPath}\{song.Key} ({songName} - {levelAuthorName})";
+            string extractPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
 
             if (!Directory.Exists(extractPath))
                 Directory.CreateDirectory(extractPath);
@@ -364,7 +358,7 @@ namespace BeatSaverApi
         {
             if (song.IsDownloaded)
             {
-                string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
+                string directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
 
                 if (!string.IsNullOrEmpty(directory))
                     Directory.Delete(directory, true);
@@ -375,7 +369,7 @@ namespace BeatSaverApi
 
         public void DeleteSong(LocalBeatmap song)
         {
-            string directory = Directory.GetDirectories(songsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
+            string directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
 
             if (!string.IsNullOrEmpty(directory))
                 Directory.Delete(directory, true);

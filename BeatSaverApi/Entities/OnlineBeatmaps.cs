@@ -1,7 +1,4 @@
-﻿using BeatSaverApi.Entities;
-using Newtonsoft.Json;
-using System;
-using System.ComponentModel;
+﻿using Newtonsoft.Json;
 
 namespace BeatSaverApi.Entities
 {

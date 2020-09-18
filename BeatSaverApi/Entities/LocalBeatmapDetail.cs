@@ -5,7 +5,7 @@ namespace BeatSaverApi.Entities
 {
     public class LocalBeatmapDetail
     {
-        public DifficultyBeatmap Difficulty { get; set; }
+        public DifficultyBeatmap DifficultyBeatmap { get; set; }
 
         [JsonProperty("_version")]
         public string Version { get; set; }
