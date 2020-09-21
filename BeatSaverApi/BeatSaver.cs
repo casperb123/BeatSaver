@@ -3,6 +3,7 @@ using BeatSaverApi.Events;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -21,7 +22,8 @@ namespace BeatSaverApi
         private readonly string beatSaverDownloadsApi;
         private readonly string beatSaverPlaysApi;
         private readonly string beatSaverSearchApi;
-        private readonly string beatSaverDetailsApi;
+        private readonly string beatSaverDetailsKeyApi;
+        private readonly string beatSaverDetailsHashApi;
         private readonly string downloadPath;
         private readonly string[] excludedCharacters;
 
@@ -40,7 +42,8 @@ namespace BeatSaverApi
             beatSaverDownloadsApi = $"{beatSaverApi}/maps/downloads";
             beatSaverPlaysApi = $"{beatSaverApi}/maps/plays";
             beatSaverSearchApi = $"{beatSaverApi}/search/text";
-            beatSaverDetailsApi = $"{beatSaverApi}/maps/detail";
+            beatSaverDetailsKeyApi = $"{beatSaverApi}/maps/detail";
+            beatSaverDetailsHashApi = $"{beatSaverApi}/maps/by-hash";
             SongsPath = songsPath;
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -153,9 +156,11 @@ namespace BeatSaverApi
         {
             LocalBeatmaps localBeatmaps = cachedLocalBeatmaps is null ? new LocalBeatmaps() : new LocalBeatmaps(cachedLocalBeatmaps);
             List<string> songs = Directory.GetDirectories(SongsPath).ToList();
+
             foreach (LocalBeatmap beatmap in localBeatmaps.Maps.ToList())
             {
-                string song = songs.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == beatmap.Key);
+                string song = songs.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == beatmap.Identifier.Value);
+
                 if (song != null)
                     songs.Remove(song);
             }
@@ -169,7 +174,8 @@ namespace BeatSaverApi
             foreach (string songFolder in songs)
             {
                 string infoFile = $@"{songFolder}\info.dat";
-                string key = new DirectoryInfo(songFolder).Name.Split(" ")[0];
+                string[] folderName = new DirectoryInfo(songFolder).Name.Split(" ");
+                LocalIdentifier identifier = folderName.Length == 1 ? new LocalIdentifier(false, folderName[0]) : new LocalIdentifier(true, folderName[0]);
 
                 if (!File.Exists(infoFile))
                     continue;
@@ -178,7 +184,7 @@ namespace BeatSaverApi
                 LocalBeatmap beatmap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
 
                 beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
-                beatmap.Key = key;
+                beatmap.Identifier = identifier;
 
                 DifficultyBeatmapSet difficultyBeatmapSet = beatmap.DifficultyBeatmapSets[0];
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
@@ -192,7 +198,7 @@ namespace BeatSaverApi
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                     beatmap.ExpertPlus = true;
 
-                _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(key));
+                _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(identifier));
 
                 _ = Task.Run(async () =>
                 {
@@ -358,7 +364,11 @@ namespace BeatSaverApi
         {
             if (song.IsDownloaded)
             {
-                string directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
+                string directory;
+                if (Directory.Exists($@"{SongsPath}\{song.Hash}"))
+                    directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Hash);
+                else
+                    directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
 
                 if (!string.IsNullOrEmpty(directory))
                     Directory.Delete(directory, true);
@@ -369,7 +379,7 @@ namespace BeatSaverApi
 
         public void DeleteSong(LocalBeatmap song)
         {
-            string directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
+            string directory = Directory.GetDirectories(SongsPath).FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Identifier.Value);
 
             if (!string.IsNullOrEmpty(directory))
                 Directory.Delete(directory, true);
@@ -381,14 +391,15 @@ namespace BeatSaverApi
                 DeleteSong(song);
         }
 
-        public async Task<OnlineBeatmap> GetBeatmap(string key)
+        public async Task<OnlineBeatmap> GetBeatmap(LocalIdentifier identifier)
         {
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
                     webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
-                    string json = await webClient.DownloadStringTaskAsync($"{beatSaverDetailsApi}/{key}");
+                    string api = identifier.IsKey ? $"{beatSaverDetailsKeyApi}/{identifier.Value}" : $"{beatSaverDetailsHashApi}/{identifier.Value}";
+                    string json = await webClient.DownloadStringTaskAsync(api);
                     return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
                 }
             }

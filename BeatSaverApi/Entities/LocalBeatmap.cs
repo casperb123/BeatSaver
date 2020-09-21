@@ -79,7 +79,7 @@ namespace BeatSaverApi.Entities
             }
         }
 
-        public string Key { get; set; }
+        public LocalIdentifier Identifier { get; set; }
         public string CoverImagePath { get; set; }
         public int Page { get; set; }
 
@@ -102,6 +102,19 @@ namespace BeatSaverApi.Entities
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
     }
+
+    public class LocalIdentifier
+    {
+        public bool IsKey { get; set; }
+        public string Value { get; set; }
+
+        public LocalIdentifier(bool isKey, string value)
+        {
+            IsKey = isKey;
+            Value = value;
+        }
+    }
+
     public class InfoCustomData
     {
         [JsonProperty("_contributors")]
