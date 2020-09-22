@@ -1,14 +1,34 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace BeatSaverApi.Entities
 {
-    public class LocalBeatmaps
+    public class LocalBeatmaps : INotifyPropertyChanged
     {
+        private int? prevPage;
+        private int? nextPage;
+
         public List<LocalBeatmap> Maps { get; set; }
         public int LastPage { get; set; }
-        public int? PrevPage { get; set; }
-        public int? NextPage { get; set; }
+        public int? PrevPage
+        {
+            get { return prevPage; }
+            set
+            {
+                prevPage = value;
+                OnPropertyChanged(nameof(CurrentPageReal));
+            }
+        }
+        public int? NextPage
+        {
+            get { return nextPage; }
+            set
+            {
+                nextPage = value;
+                OnPropertyChanged(nameof(CurrentPageReal));
+            }
+        }
         public int CurrentPage
         {
             get
@@ -26,6 +46,14 @@ namespace BeatSaverApi.Entities
         public int LastPageReal
         {
             get { return LastPage + 1; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string prop)
+        {
+            if (!string.IsNullOrWhiteSpace(prop))
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
         public LocalBeatmaps()
