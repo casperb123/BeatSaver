@@ -10,7 +10,6 @@ namespace BeatSaverApi.Entities
         private string songSubName;
         private List<LocalBeatmapDetails> details;
         private OnlineBeatmap onlineBeatmap;
-        private SongSpawningInfo songSpawningInfo;
 
         [JsonProperty("_version")]
         public string Version { get; set; }
@@ -77,15 +76,6 @@ namespace BeatSaverApi.Entities
             {
                 details = value;
                 OnPropertyChanged(nameof(Details));
-            }
-        }
-        public SongSpawningInfo SongSpawningInfo
-        {
-            get { return songSpawningInfo; }
-            set
-            {
-                songSpawningInfo = value;
-                OnPropertyChanged(nameof(SongSpawningInfo));
             }
         }
 
