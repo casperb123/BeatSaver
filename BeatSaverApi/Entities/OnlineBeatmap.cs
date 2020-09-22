@@ -64,6 +64,11 @@ namespace BeatSaverApi.Entities
         public string SongName { get; set; }
         public string SongSubName { get; set; }
         public float Bpm { get; set; }
+
+        public string FullSongName
+        {
+            get { return $"{SongName} {SongSubName}"; }
+        }
     }
 
     public class Difficulties

@@ -199,8 +199,6 @@ namespace BeatSaverApi
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                     beatmap.ExpertPlus = true;
 
-                
-
                 _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(identifier));
 
                 _ = Task.Run(async () =>
@@ -254,42 +252,38 @@ namespace BeatSaverApi
             return localBeatmapDetails;
         }
 
-        public LocalBeatmaps ChangeLocalPage(LocalBeatmaps localBeatmaps, int page)
+        public void ChangeLocalPage(LocalBeatmaps localBeatmaps, int page)
         {
-            LocalBeatmaps newLocalBeatmaps = new LocalBeatmaps(localBeatmaps);
-
-            if (page >= 0 && page <= newLocalBeatmaps.LastPage)
+            if (page >= 0 && page <= localBeatmaps.LastPage)
             {
                 if (page == 0)
-                    newLocalBeatmaps.PrevPage = null;
+                    localBeatmaps.PrevPage = null;
                 else
-                    newLocalBeatmaps.PrevPage = page - 1;
+                    localBeatmaps.PrevPage = page - 1;
 
-                if (page == newLocalBeatmaps.LastPage)
-                    newLocalBeatmaps.NextPage = null;
+                if (page == localBeatmaps.LastPage)
+                    localBeatmaps.NextPage = null;
                 else
-                    newLocalBeatmaps.NextPage = page + 1;
+                    localBeatmaps.NextPage = page + 1;
             }
             else if (page <= 0)
             {
                 page = 0;
-                newLocalBeatmaps.PrevPage = null;
-                if (page + 1 <= newLocalBeatmaps.LastPage)
-                    newLocalBeatmaps.NextPage = page + 1;
+                localBeatmaps.PrevPage = null;
+                if (page + 1 <= localBeatmaps.LastPage)
+                    localBeatmaps.NextPage = page + 1;
                 else
-                    newLocalBeatmaps.NextPage = null;
+                    localBeatmaps.NextPage = null;
             }
-            else if (page >= newLocalBeatmaps.LastPage)
+            else if (page >= localBeatmaps.LastPage)
             {
-                page = newLocalBeatmaps.LastPage;
-                newLocalBeatmaps.NextPage = null;
+                page = localBeatmaps.LastPage;
+                localBeatmaps.NextPage = null;
                 if (page - 1 >= 0)
-                    newLocalBeatmaps.PrevPage = page - 1;
+                    localBeatmaps.PrevPage = page - 1;
                 else
-                    newLocalBeatmaps.PrevPage = null;
+                    localBeatmaps.PrevPage = null;
             }
-
-            return newLocalBeatmaps;
         }
 
         public LocalBeatmaps RefreshLocalPages(LocalBeatmaps localBeatmaps)

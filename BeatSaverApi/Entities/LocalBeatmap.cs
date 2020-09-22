@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace BeatSaverApi.Entities
 {
@@ -79,6 +81,10 @@ namespace BeatSaverApi.Entities
             }
         }
 
+        public string FullSongName
+        {
+            get { return $"{SongName} {SongSubName}"; }
+        }
         public LocalIdentifier Identifier { get; set; }
         public string FolderPath { get; set; }
         public string CoverImagePath { get; set; }
