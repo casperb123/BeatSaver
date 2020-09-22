@@ -241,7 +241,9 @@ namespace BeatSaverApi
                     LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
                     beatmapDetail.HalfJumpDuration = halfJumpDuration;
                     beatmapDetail.JumpDistance = difficultyBeatmap.NoteJumpMovementSpeed * (((float)secondEquivalentOfBeat) * (halfJumpDuration * 2));
-                    beatmapDetail.Duration = beatmapDetail.Notes[0].Time * secondEquivalentOfBeat;
+                    if (beatmapDetail.Notes.Length > 0)
+                        beatmapDetail.Duration = beatmapDetail.Notes[0].Time * secondEquivalentOfBeat;
+
                     beatmapDetail.DifficultyBeatmap = difficultyBeatmap;
                     beatmapDetails.BeatmapDetails.Add(beatmapDetail);
                 }

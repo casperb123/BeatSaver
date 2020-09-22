@@ -34,7 +34,7 @@ namespace BeatSaverApi.Entities
         {
             get { return Events.Length; }
         }
-        public float Duration { get; set; }
+        public float? Duration { get; set; }
         public double HalfJumpDuration { get; set; }
         public float JumpDistance { get; set; }
     }
