@@ -30,10 +30,13 @@ namespace BeatSaverApi.Entities
         {
             get { return Obstacles.Length; }
         }
-        public float Duration
+        public int EventsCount
         {
-            get { return Notes[Notes.Length - 1].Time; }
+            get { return Events.Length; }
         }
+        public float Duration { get; set; }
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
     }
 
     public class Customdata

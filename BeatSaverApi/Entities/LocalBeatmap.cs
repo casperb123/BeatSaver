@@ -10,6 +10,7 @@ namespace BeatSaverApi.Entities
         private string songSubName;
         private List<LocalBeatmapDetails> details;
         private OnlineBeatmap onlineBeatmap;
+        private SongSpawningInfo songSpawningInfo;
 
         [JsonProperty("_version")]
         public string Version { get; set; }
@@ -78,8 +79,18 @@ namespace BeatSaverApi.Entities
                 OnPropertyChanged(nameof(Details));
             }
         }
+        public SongSpawningInfo SongSpawningInfo
+        {
+            get { return songSpawningInfo; }
+            set
+            {
+                songSpawningInfo = value;
+                OnPropertyChanged(nameof(SongSpawningInfo));
+            }
+        }
 
         public LocalIdentifier Identifier { get; set; }
+        public string FolderPath { get; set; }
         public string CoverImagePath { get; set; }
         public int Page { get; set; }
 
@@ -147,7 +158,7 @@ namespace BeatSaverApi.Entities
         [JsonProperty("_noteJumpMovementSpeed")]
         public float NoteJumpMovementSpeed { get; set; }
         [JsonProperty("_noteJumpStartBeatOffset")]
-        public double NoteJumpStartBeatOffset { get; set; }
+        public float NoteJumpStartBeatOffset { get; set; }
         [JsonProperty("_customData")]
         public DifficultyBeatmapCustomData CustomData { get; set; }
     }

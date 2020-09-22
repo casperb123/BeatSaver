@@ -185,6 +185,7 @@ namespace BeatSaverApi
 
                 beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
                 beatmap.Identifier = identifier;
+                beatmap.FolderPath = songFolder;
 
                 DifficultyBeatmapSet difficultyBeatmapSet = beatmap.DifficultyBeatmapSets[0];
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
@@ -198,11 +199,13 @@ namespace BeatSaverApi
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
                     beatmap.ExpertPlus = true;
 
+                
+
                 _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(identifier));
 
                 _ = Task.Run(async () =>
                 {
-                    List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(songFolder, beatmap.DifficultyBeatmapSets);
+                    List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(beatmap, beatmap.DifficultyBeatmapSets);
                     beatmap.Details = localBeatmapDetails;
                 });
 
@@ -212,7 +215,7 @@ namespace BeatSaverApi
             return RefreshLocalPages(localBeatmaps);
         }
 
-        private async Task<List<LocalBeatmapDetails>> GetLocalBeatmapDetails(string songFolder, DifficultyBeatmapSet[] beatmapSets)
+        private async Task<List<LocalBeatmapDetails>> GetLocalBeatmapDetails(LocalBeatmap localBeatmap, DifficultyBeatmapSet[] beatmapSets)
         {
             List<LocalBeatmapDetails> localBeatmapDetails = new List<LocalBeatmapDetails>();
 
@@ -222,9 +225,25 @@ namespace BeatSaverApi
 
                 foreach (DifficultyBeatmap difficultyBeatmap in difficultyBeatmapSet.DifficultyBeatmaps)
                 {
-                    string filePath = $@"{songFolder}\{difficultyBeatmap.BeatmapFilename}";
+                    float secondEquivalentOfBeat = 60 / localBeatmap.BeatsPerMinute;
+                    float num4 = 1f;
+                    float num5 = 18f;
+                    float num6 = 4f;
+                    float num8 = num6;
+
+                    while (difficultyBeatmap.NoteJumpMovementSpeed * secondEquivalentOfBeat * num8 > num5)
+                        num8 /= 2f;
+
+                    float halfJumpDuration = num8 + difficultyBeatmap.NoteJumpStartBeatOffset;
+                    if (halfJumpDuration < num4)
+                        halfJumpDuration = num4;
+
+                    string filePath = $@"{localBeatmap.FolderPath}\{difficultyBeatmap.BeatmapFilename}";
                     string json = await File.ReadAllTextAsync(filePath);
                     LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
+                    beatmapDetail.HalfJumpDuration = halfJumpDuration;
+                    beatmapDetail.JumpDistance = difficultyBeatmap.NoteJumpMovementSpeed * (((float)secondEquivalentOfBeat) * (halfJumpDuration * 2));
+                    beatmapDetail.Duration = beatmapDetail.Notes[0].Time * secondEquivalentOfBeat;
                     beatmapDetail.DifficultyBeatmap = difficultyBeatmap;
                     beatmapDetails.BeatmapDetails.Add(beatmapDetail);
                 }
