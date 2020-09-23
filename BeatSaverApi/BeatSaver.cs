@@ -257,6 +257,8 @@ namespace BeatSaverApi
 
                 string json = await File.ReadAllTextAsync(infoFile);
                 LocalBeatmap beatmap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
+                if (!File.Exists($@"{songFolder}\{beatmap.SongFilename}"))
+                    continue;
 
                 beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
                 beatmap.Identifier = identifier;
