@@ -127,8 +127,30 @@ namespace BeatSaverApi
                     string[] songsDownloaded = Directory.GetDirectories(SongsPath);
 
                     foreach (OnlineBeatmap song in beatSaverMaps.Maps)
-                        foreach (string directory in Directory.GetDirectories(SongsPath))
-                            song.IsDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key);
+                    {
+                        song.Metadata.DurationTimeSpan = new TimeSpan(0, 0, song.Metadata.Duration);
+                        string folder = songsDownloaded.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key || new DirectoryInfo(x).Name.Split(" ")[0] == song.Hash);
+
+                        foreach (Characteristic characteristic in song.Metadata.Characteristics)
+                        {
+                            if (characteristic.Difficulties.Easy != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Easy);
+                            if (characteristic.Difficulties.Normal != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Normal);
+                            if (characteristic.Difficulties.Hard != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Hard);
+                            if (characteristic.Difficulties.Expert != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Expert);
+                            if (characteristic.Difficulties.ExpertPlus != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.ExpertPlus);
+                        }
+
+                        if (!string.IsNullOrEmpty(folder))
+                        {
+                            song.IsDownloaded = true;
+                            song.Metadata.FolderPath = folder;
+                        }
+                    }
 
                     return beatSaverMaps;
                 }
@@ -153,8 +175,28 @@ namespace BeatSaverApi
 
                     foreach (OnlineBeatmap song in beatSaverMaps.Maps)
                     {
-                        foreach (string directory in Directory.GetDirectories(SongsPath))
-                            song.IsDownloaded = songsDownloaded.Any(x => new DirectoryInfo(x).Name == song.Hash);
+                        song.Metadata.DurationTimeSpan = new TimeSpan(0, 0, song.Metadata.Duration);
+                        string folder = songsDownloaded.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key || new DirectoryInfo(x).Name.Split(" ")[0] == song.Hash);
+
+                        foreach (Characteristic characteristic in song.Metadata.Characteristics)
+                        {
+                            if (characteristic.Difficulties.Easy != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Easy);
+                            if (characteristic.Difficulties.Normal != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Normal);
+                            if (characteristic.Difficulties.Hard != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Hard);
+                            if (characteristic.Difficulties.Expert != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.Expert);
+                            if (characteristic.Difficulties.ExpertPlus != null)
+                                SetOnlineNoteInformation(song, characteristic.Difficulties.ExpertPlus);
+                        }
+
+                        if (!string.IsNullOrEmpty(folder))
+                        {
+                            song.IsDownloaded = true;
+                            song.Metadata.FolderPath = folder;
+                        }
                     }
 
                     return beatSaverMaps;
@@ -164,6 +206,25 @@ namespace BeatSaverApi
             {
                 return null;
             }
+        }
+
+        public void SetOnlineNoteInformation(OnlineBeatmap onlineBeatmap, IDifficulty difficulty)
+        {
+            float secondEquivalentOfBeat = 60 / onlineBeatmap.Metadata.BeatsPerMinute;
+            float minHalfJumpDuration = 1f;
+            float jumpSpeedThreshold = 18f;
+            float halfJumpDuration = 4f;
+
+            while (difficulty.NoteJumpMovementSpeed * secondEquivalentOfBeat * halfJumpDuration > jumpSpeedThreshold)
+                halfJumpDuration /= 2f;
+
+            halfJumpDuration += difficulty.NoteJumpStartBeatOffset;
+
+            if (halfJumpDuration < minHalfJumpDuration)
+                halfJumpDuration = minHalfJumpDuration;
+
+            difficulty.HalfJumpDuration = halfJumpDuration;
+            difficulty.JumpDistance = difficulty.NoteJumpMovementSpeed * (secondEquivalentOfBeat * (halfJumpDuration * 2));
         }
 
         public async Task<LocalBeatmaps> GetLocalBeatmaps(LocalBeatmaps cachedLocalBeatmaps = null)

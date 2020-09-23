@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 
 namespace BeatSaverApi.Entities
@@ -55,20 +56,46 @@ namespace BeatSaverApi.Entities
 
     public class Metadata
     {
+        private string songAuthorName;
+        private string songSubName;
+
         public Difficulties Difficulties { get; set; }
         public int Duration { get; set; }
+        public TimeSpan DurationTimeSpan { get; set; }
         public object Automapper { get; set; }
         public Characteristic[] Characteristics { get; set; }
         public string LevelAuthorName { get; set; }
-        public string SongAuthorName { get; set; }
+        public string SongAuthorName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(songAuthorName))
+                    return null;
+                else
+                    return songAuthorName;
+            }
+            set { songAuthorName = value; }
+        }
         public string SongName { get; set; }
-        public string SongSubName { get; set; }
-        public float Bpm { get; set; }
+        public string SongSubName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(songSubName))
+                    return null;
+                else
+                    return songSubName;
+            }
+            set { songSubName = value; }
+        }
+        [JsonProperty("bpm")]
+        public float BeatsPerMinute { get; set; }
 
         public string FullSongName
         {
             get { return $"{SongName} {SongSubName}"; }
         }
+        public string FolderPath { get; set; }
     }
 
     public class Difficulties
@@ -90,64 +117,105 @@ namespace BeatSaverApi.Entities
     {
         public Easy Easy { get; set; }
         public Expert Expert { get; set; }
-        public Expertplus ExpertPlus { get; set; }
+        public ExpertPlus ExpertPlus { get; set; }
         public Hard Hard { get; set; }
         public Normal Normal { get; set; }
     }
 
-    public class Easy
+    public interface IDifficulty
     {
         public float Duration { get; set; }
         public int Length { get; set; }
-        public float Njs { get; set; }
-        public float NjsOffset { get; set; }
+        [JsonProperty("njs")]
+        public float NoteJumpMovementSpeed { get; set; }
+        [JsonProperty("njsOffset")]
+        public float NoteJumpStartBeatOffset { get; set; }
         public int Bombs { get; set; }
         public int Notes { get; set; }
         public int Obstacles { get; set; }
+
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
     }
 
-    public class Expert
+    public class Easy : IDifficulty
     {
         public float Duration { get; set; }
         public int Length { get; set; }
-        public float Njs { get; set; }
-        public float NjsOffset { get; set; }
+        [JsonProperty("njs")]
+        public float NoteJumpMovementSpeed { get; set; }
+        [JsonProperty("njsOffset")]
+        public float NoteJumpStartBeatOffset { get; set; }
         public int Bombs { get; set; }
         public int Notes { get; set; }
         public int Obstacles { get; set; }
+
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
     }
 
-    public class Expertplus
+    public class Expert : IDifficulty
     {
         public float Duration { get; set; }
         public int Length { get; set; }
-        public float Njs { get; set; }
-        public float NjsOffset { get; set; }
+        [JsonProperty("njs")]
+        public float NoteJumpMovementSpeed { get; set; }
+        [JsonProperty("njsOffset")]
+        public float NoteJumpStartBeatOffset { get; set; }
         public int Bombs { get; set; }
         public int Notes { get; set; }
         public int Obstacles { get; set; }
+
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
     }
 
-    public class Hard
+    public class ExpertPlus : IDifficulty
     {
         public float Duration { get; set; }
         public int Length { get; set; }
-        public float Njs { get; set; }
-        public float NjsOffset { get; set; }
+        [JsonProperty("njs")]
+        public float NoteJumpMovementSpeed { get; set; }
+        [JsonProperty("njsOffset")]
+        public float NoteJumpStartBeatOffset { get; set; }
         public int Bombs { get; set; }
         public int Notes { get; set; }
         public int Obstacles { get; set; }
+
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
     }
 
-    public class Normal
+    public class Hard : IDifficulty
     {
         public float Duration { get; set; }
         public int Length { get; set; }
-        public float Njs { get; set; }
-        public float NjsOffset { get; set; }
+        [JsonProperty("njs")]
+        public float NoteJumpMovementSpeed { get; set; }
+        [JsonProperty("njsOffset")]
+        public float NoteJumpStartBeatOffset { get; set; }
         public int Bombs { get; set; }
         public int Notes { get; set; }
         public int Obstacles { get; set; }
+
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
+    }
+
+    public class Normal : IDifficulty
+    {
+        public float Duration { get; set; }
+        public int Length { get; set; }
+        [JsonProperty("njs")]
+        public float NoteJumpMovementSpeed { get; set; }
+        [JsonProperty("njsOffset")]
+        public float NoteJumpStartBeatOffset { get; set; }
+        public int Bombs { get; set; }
+        public int Notes { get; set; }
+        public int Obstacles { get; set; }
+
+        public double HalfJumpDuration { get; set; }
+        public float JumpDistance { get; set; }
     }
 
     public class Stats
