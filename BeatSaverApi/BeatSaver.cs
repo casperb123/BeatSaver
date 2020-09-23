@@ -9,6 +9,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BeatSaverApi
@@ -50,13 +51,13 @@ namespace BeatSaverApi
 
             string runningPath = AppDomain.CurrentDomain.BaseDirectory;
 #if DEBUG
-            string ffmpedPath = $@"{Path.GetFullPath(Path.Combine(runningPath, @"..\..\..\..\..\"))}BeatSaverApi\BeatSaverApi\ffmpeg";
+            string ffmpegPath = $@"{Path.GetFullPath(Path.Combine(runningPath, @"..\..\..\..\..\"))}BeatSaverApi\BeatSaverApi\ffmpeg";
 #else
-            string ffmpedPath = $@"{runningPath}\ffmpeg";
+            string ffmpegPath = $@"{runningPath}\ffmpeg";
 #endif
             ffProbe = new FFProbe
             {
-                ToolPath = ffmpedPath
+                ToolPath = ffmpegPath
             };
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
