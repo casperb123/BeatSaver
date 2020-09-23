@@ -1,6 +1,7 @@
 ﻿using BeatSaverApi.Entities;
 using BeatSaverApi.Events;
 using Newtonsoft.Json;
+using NReco.VideoInfo;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -26,6 +27,7 @@ namespace BeatSaverApi
         private readonly string beatSaverDetailsHashApi;
         private readonly string downloadPath;
         private readonly string[] excludedCharacters;
+        private readonly FFProbe ffProbe;
 
         public string SongsPath;
 
@@ -45,6 +47,17 @@ namespace BeatSaverApi
             beatSaverDetailsKeyApi = $"{beatSaverApi}/maps/detail";
             beatSaverDetailsHashApi = $"{beatSaverApi}/maps/by-hash";
             SongsPath = songsPath;
+
+            string runningPath = AppDomain.CurrentDomain.BaseDirectory;
+#if DEBUG
+            string ffmpedPath = $@"{Path.GetFullPath(Path.Combine(runningPath, @"..\..\..\..\..\"))}BeatSaverApi\BeatSaverApi\ffmpeg";
+#else
+            string ffmpedPath = $@"{runningPath}\ffmpeg";
+#endif
+            ffProbe = new FFProbe
+            {
+                ToolPath = ffmpedPath
+            };
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             downloadPath = $@"{appData}\BeatSaverApi";
@@ -187,6 +200,9 @@ namespace BeatSaverApi
                 beatmap.Identifier = identifier;
                 beatmap.FolderPath = songFolder;
 
+                MediaInfo mediaInfo = ffProbe.GetMediaInfo($@"{beatmap.FolderPath}\{beatmap.SongFilename}");
+                beatmap.Duration = mediaInfo.Duration;
+
                 DifficultyBeatmapSet difficultyBeatmapSet = beatmap.DifficultyBeatmapSets[0];
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
                     beatmap.Easy = true;
@@ -224,26 +240,23 @@ namespace BeatSaverApi
                 foreach (DifficultyBeatmap difficultyBeatmap in difficultyBeatmapSet.DifficultyBeatmaps)
                 {
                     float secondEquivalentOfBeat = 60 / localBeatmap.BeatsPerMinute;
-                    float num4 = 1f;
-                    float num5 = 18f;
-                    float num6 = 4f;
-                    float num8 = num6;
+                    float minHalfJumpDuration = 1f;
+                    float jumpSpeedThreshold = 18f;
+                    float halfJumpDuration = 4f;
 
-                    while (difficultyBeatmap.NoteJumpMovementSpeed * secondEquivalentOfBeat * num8 > num5)
-                        num8 /= 2f;
+                    while (difficultyBeatmap.NoteJumpMovementSpeed * secondEquivalentOfBeat * halfJumpDuration > jumpSpeedThreshold)
+                        halfJumpDuration /= 2f;
 
-                    float halfJumpDuration = num8 + difficultyBeatmap.NoteJumpStartBeatOffset;
-                    if (halfJumpDuration < num4)
-                        halfJumpDuration = num4;
+                    halfJumpDuration += difficultyBeatmap.NoteJumpStartBeatOffset;
+
+                    if (halfJumpDuration < minHalfJumpDuration)
+                        halfJumpDuration = minHalfJumpDuration;
 
                     string filePath = $@"{localBeatmap.FolderPath}\{difficultyBeatmap.BeatmapFilename}";
                     string json = await File.ReadAllTextAsync(filePath);
                     LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
                     beatmapDetail.HalfJumpDuration = halfJumpDuration;
-                    beatmapDetail.JumpDistance = difficultyBeatmap.NoteJumpMovementSpeed * (((float)secondEquivalentOfBeat) * (halfJumpDuration * 2));
-                    if (beatmapDetail.Notes.Length > 0)
-                        beatmapDetail.Duration = beatmapDetail.Notes[0].Time * secondEquivalentOfBeat;
-
+                    beatmapDetail.JumpDistance = difficultyBeatmap.NoteJumpMovementSpeed * (secondEquivalentOfBeat * (halfJumpDuration * 2));
                     beatmapDetail.DifficultyBeatmap = difficultyBeatmap;
                     beatmapDetails.BeatmapDetails.Add(beatmapDetail);
                 }

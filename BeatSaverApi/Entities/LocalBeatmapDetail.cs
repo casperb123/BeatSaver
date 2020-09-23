@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Linq;
 
 namespace BeatSaverApi.Entities
@@ -34,7 +35,6 @@ namespace BeatSaverApi.Entities
         {
             get { return Events.Length; }
         }
-        public float? Duration { get; set; }
         public double HalfJumpDuration { get; set; }
         public float JumpDistance { get; set; }
     }
