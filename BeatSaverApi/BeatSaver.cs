@@ -4,12 +4,10 @@ using Newtonsoft.Json;
 using NReco.VideoInfo;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BeatSaverApi
@@ -257,15 +255,17 @@ namespace BeatSaverApi
 
                 string json = await File.ReadAllTextAsync(infoFile);
                 LocalBeatmap beatmap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
-                if (!File.Exists($@"{songFolder}\{beatmap.SongFilename}"))
-                    continue;
+                if (File.Exists($@"{songFolder}\{beatmap.CoverImageFilename}"))
+                    beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
 
-                beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
                 beatmap.Identifier = identifier;
                 beatmap.FolderPath = songFolder;
 
-                MediaInfo mediaInfo = ffProbe.GetMediaInfo($@"{beatmap.FolderPath}\{beatmap.SongFilename}");
-                beatmap.Duration = mediaInfo.Duration;
+                if (File.Exists($@"{songFolder}\{beatmap.SongFilename}"))
+                {
+                    MediaInfo mediaInfo = ffProbe.GetMediaInfo($@"{beatmap.FolderPath}\{beatmap.SongFilename}");
+                    beatmap.Duration = mediaInfo.Duration;
+                }
 
                 DifficultyBeatmapSet difficultyBeatmapSet = beatmap.DifficultyBeatmapSets[0];
                 if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))

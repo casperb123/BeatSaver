@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 
 namespace BeatSaverApi.Entities
 {
@@ -88,7 +87,7 @@ namespace BeatSaverApi.Entities
         public LocalIdentifier Identifier { get; set; }
         public string FolderPath { get; set; }
         public string CoverImagePath { get; set; }
-        public TimeSpan Duration { get; set; }
+        public TimeSpan? Duration { get; set; }
         public int Page { get; set; }
 
         public OnlineBeatmap OnlineBeatmap
