@@ -7,6 +7,7 @@ namespace BeatSaverApi.Entities
 {
     public class LocalBeatmap : INotifyPropertyChanged
     {
+        private string levelAuthorName;
         private string songAuthorName;
         private string songSubName;
         private List<LocalBeatmapDetails> details;
@@ -41,7 +42,17 @@ namespace BeatSaverApi.Entities
             set { songAuthorName = value; }
         }
         [JsonProperty("_levelAuthorName")]
-        public string LevelAuthorName { get; set; }
+        public string LevelAuthorName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(levelAuthorName))
+                    return null;
+                else
+                    return levelAuthorName;
+            }
+            set { levelAuthorName = value; }
+        }
         [JsonProperty("_beatsPerMinute")]
         public float BeatsPerMinute { get; set; }
         [JsonProperty("_shuffle")]
