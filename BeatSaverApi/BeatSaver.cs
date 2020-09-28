@@ -267,17 +267,19 @@ namespace BeatSaverApi
                     beatmap.Duration = mediaInfo.Duration;
                 }
 
-                DifficultyBeatmapSet difficultyBeatmapSet = beatmap.DifficultyBeatmapSets[0];
-                if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
-                    beatmap.Easy = true;
-                if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Normal"))
-                    beatmap.Normal = true;
-                if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Hard"))
-                    beatmap.Hard = true;
-                if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Expert"))
-                    beatmap.Expert = true;
-                if (difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
-                    beatmap.ExpertPlus = true;
+                foreach (DifficultyBeatmapSet difficultyBeatmapSet in beatmap.DifficultyBeatmapSets)
+                {
+                    if (!beatmap.Easy && difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Easy"))
+                        beatmap.Easy = true;
+                    if (!beatmap.Normal && difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Normal"))
+                        beatmap.Normal = true;
+                    if (!beatmap.Hard && difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Hard"))
+                        beatmap.Hard = true;
+                    if (!beatmap.Expert && difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "Expert"))
+                        beatmap.Expert = true;
+                    if (!beatmap.ExpertPlus && difficultyBeatmapSet.DifficultyBeatmaps.Any(x => x.Difficulty == "ExpertPlus"))
+                        beatmap.ExpertPlus = true;
+                }
 
                 _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(identifier));
 

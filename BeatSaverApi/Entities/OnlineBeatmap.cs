@@ -56,6 +56,7 @@ namespace BeatSaverApi.Entities
 
     public class Metadata
     {
+        private string levelAuthorName;
         private string songAuthorName;
         private string songSubName;
 
@@ -64,7 +65,17 @@ namespace BeatSaverApi.Entities
         public TimeSpan DurationTimeSpan { get; set; }
         public object Automapper { get; set; }
         public Characteristic[] Characteristics { get; set; }
-        public string LevelAuthorName { get; set; }
+        public string LevelAuthorName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(levelAuthorName))
+                    return null;
+                else
+                    return levelAuthorName;
+            }
+            set { levelAuthorName = value; }
+        }
         public string SongAuthorName
         {
             get
