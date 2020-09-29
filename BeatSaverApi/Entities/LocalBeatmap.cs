@@ -185,5 +185,23 @@ namespace BeatSaverApi.Entities
         public string[] Suggestions { get; set; }
         [JsonProperty("_requirements")]
         public string[] Requirements { get; set; }
+
+        [JsonIgnore]
+        public List<string> RequiredMods
+        {
+            get
+            {
+                List<string> requiredMods = new List<string>();
+
+                if (Requirements != null)
+                    foreach (string mod in Requirements)
+                        requiredMods.Add(mod);
+                if (Suggestions != null)
+                    foreach (string mod in Suggestions)
+                        requiredMods.Add(mod);
+
+                return requiredMods;
+            }
+        }
     }
 }
