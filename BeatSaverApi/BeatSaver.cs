@@ -145,41 +145,71 @@ namespace BeatSaverApi
             }
         }
 
-        public async Task<OnlineBeatmaps> GetOnlineBeatmaps(string query, int page = 0)
+        public async Task<OnlineBeatmaps> GetOnlineBeatmaps(string query, MapSort mapSort, int page = 0)
         {
             try
             {
                 using (WebClient webClient = new WebClient())
                 {
                     webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
-                    string json = await webClient.DownloadStringTaskAsync($"{beatSaverSearchApi}/{page}?q={query}");
+                    OnlineBeatmaps beatSaverMaps = null;
 
-                    OnlineBeatmaps beatSaverMaps = JsonConvert.DeserializeObject<OnlineBeatmaps>(json);
-                    string[] songsDownloaded = Directory.GetDirectories(SongsPath);
-
-                    foreach (OnlineBeatmap song in beatSaverMaps.Maps)
+                    if (mapSort == MapSort.Search)
                     {
-                        song.Metadata.DurationTimeSpan = new TimeSpan(0, 0, song.Metadata.Duration);
-                        string folder = songsDownloaded.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key || new DirectoryInfo(x).Name.Split(" ")[0] == song.Hash);
-
-                        foreach (Characteristic characteristic in song.Metadata.Characteristics)
+                        string json = await webClient.DownloadStringTaskAsync($"{beatSaverSearchApi}/{page}?q={query}");
+                        beatSaverMaps = JsonConvert.DeserializeObject<OnlineBeatmaps>(json);
+                    }
+                    else if (mapSort == MapSort.SearchKey)
+                    {
+                        string json = await webClient.DownloadStringTaskAsync($"{beatSaverDetailsKeyApi}/{query}");
+                        beatSaverMaps = new OnlineBeatmaps
                         {
-                            if (characteristic.Difficulties.Easy != null)
-                                SetOnlineNoteInformation(song, characteristic.Difficulties.Easy);
-                            if (characteristic.Difficulties.Normal != null)
-                                SetOnlineNoteInformation(song, characteristic.Difficulties.Normal);
-                            if (characteristic.Difficulties.Hard != null)
-                                SetOnlineNoteInformation(song, characteristic.Difficulties.Hard);
-                            if (characteristic.Difficulties.Expert != null)
-                                SetOnlineNoteInformation(song, characteristic.Difficulties.Expert);
-                            if (characteristic.Difficulties.ExpertPlus != null)
-                                SetOnlineNoteInformation(song, characteristic.Difficulties.ExpertPlus);
-                        }
-
-                        if (!string.IsNullOrEmpty(folder))
+                            Maps = new OnlineBeatmap[]
+                            {
+                                JsonConvert.DeserializeObject<OnlineBeatmap>(json)
+                            }
+                        };
+                    }
+                    else if (mapSort == MapSort.SearchHash)
+                    {
+                        string json = await webClient.DownloadStringTaskAsync($"{beatSaverDetailsHashApi}/{query}");
+                        beatSaverMaps = new OnlineBeatmaps
                         {
-                            song.IsDownloaded = true;
-                            song.Metadata.FolderPath = folder;
+                            Maps = new OnlineBeatmap[]
+                            {
+                                JsonConvert.DeserializeObject<OnlineBeatmap>(json)
+                            }
+                        };
+                    }
+
+                    if (beatSaverMaps != null)
+                    {
+                        string[] songsDownloaded = Directory.GetDirectories(SongsPath);
+
+                        foreach (OnlineBeatmap song in beatSaverMaps.Maps)
+                        {
+                            song.Metadata.DurationTimeSpan = new TimeSpan(0, 0, song.Metadata.Duration);
+                            string folder = songsDownloaded.FirstOrDefault(x => new DirectoryInfo(x).Name.Split(" ")[0] == song.Key || new DirectoryInfo(x).Name.Split(" ")[0] == song.Hash);
+
+                            foreach (Characteristic characteristic in song.Metadata.Characteristics)
+                            {
+                                if (characteristic.Difficulties.Easy != null)
+                                    SetOnlineNoteInformation(song, characteristic.Difficulties.Easy);
+                                if (characteristic.Difficulties.Normal != null)
+                                    SetOnlineNoteInformation(song, characteristic.Difficulties.Normal);
+                                if (characteristic.Difficulties.Hard != null)
+                                    SetOnlineNoteInformation(song, characteristic.Difficulties.Hard);
+                                if (characteristic.Difficulties.Expert != null)
+                                    SetOnlineNoteInformation(song, characteristic.Difficulties.Expert);
+                                if (characteristic.Difficulties.ExpertPlus != null)
+                                    SetOnlineNoteInformation(song, characteristic.Difficulties.ExpertPlus);
+                            }
+
+                            if (!string.IsNullOrEmpty(folder))
+                            {
+                                song.IsDownloaded = true;
+                                song.Metadata.FolderPath = folder;
+                            }
                         }
                     }
 
