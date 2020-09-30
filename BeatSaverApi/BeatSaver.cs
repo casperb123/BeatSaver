@@ -75,20 +75,6 @@ namespace BeatSaverApi
                 "?",
                 "*"
             };
-
-            DownloadCompleted += BeatSaver_DownloadCompleted;
-            DownloadStarted += BeatSaver_DownloadStarted;
-        }
-
-        private void BeatSaver_DownloadStarted(object sender, DownloadStartedEventArgs e)
-        {
-            e.Song.IsDownloading = true;
-        }
-
-        private void BeatSaver_DownloadCompleted(object sender, DownloadCompletedEventArgs e)
-        {
-            e.Song.IsDownloading = false;
-            e.Song.IsDownloaded = true;
         }
 
         public async Task<OnlineBeatmaps> GetOnlineBeatmaps(MapSort mapSort, int page = 0)
@@ -450,6 +436,9 @@ namespace BeatSaverApi
                 ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
                 File.Delete(downloadFilePath);
 
+                song.Metadata.FolderPath = extractPath;
+                song.IsDownloading = false;
+                song.IsDownloaded = true;
                 DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
             }
         }
