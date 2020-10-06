@@ -473,6 +473,41 @@ namespace BeatSaverApi
             }
         }
 
+        public async Task DownloadSong(string key)
+        {
+            OnlineBeatmap onlineBeatmap = await GetBeatmap(key);
+            string songName = onlineBeatmap.Name;
+            string levelAuthorName = onlineBeatmap.Metadata.LevelAuthorName;
+
+            foreach (string character in excludedCharacters)
+            {
+                songName = songName.Replace(character, "");
+                levelAuthorName = levelAuthorName.Replace(character, "");
+            }
+
+            string downloadFilePath = $@"{downloadPath}\{onlineBeatmap.Key}.zip";
+            string downloadString = $"{beatSaver}{onlineBeatmap.DownloadURL}";
+            string extractPath = $@"{SongsPath}\{onlineBeatmap.Key} ({songName} - {levelAuthorName})";
+
+            if (!Directory.Exists(extractPath))
+                Directory.CreateDirectory(extractPath);
+
+            using (WebClient webClient = new WebClient())
+            {
+                webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                onlineBeatmap.IsDownloading = true;
+                DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(onlineBeatmap));
+                await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
+                ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
+                File.Delete(downloadFilePath);
+
+                onlineBeatmap.Metadata.FolderPath = extractPath;
+                onlineBeatmap.IsDownloading = false;
+                onlineBeatmap.IsDownloaded = true;
+                DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(onlineBeatmap));
+            }
+        }
+
         public void DeleteSong(OnlineBeatmap song)
         {
             if (song.IsDownloaded)
@@ -512,6 +547,24 @@ namespace BeatSaverApi
                 {
                     webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
                     string api = identifier.IsKey ? $"{beatSaverDetailsKeyApi}/{identifier.Value}" : $"{beatSaverDetailsHashApi}/{identifier.Value}";
+                    string json = await webClient.DownloadStringTaskAsync(api);
+                    return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<OnlineBeatmap> GetBeatmap(string key)
+        {
+            try
+            {
+                using (WebClient webClient = new WebClient())
+                {
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    string api = $"{beatSaverDetailsKeyApi}/{key}";
                     string json = await webClient.DownloadStringTaskAsync(api);
                     return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
                 }
