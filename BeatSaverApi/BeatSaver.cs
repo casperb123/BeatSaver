@@ -441,70 +441,44 @@ namespace BeatSaverApi
 
         public async Task DownloadSong(OnlineBeatmap song)
         {
-            string songName = song.Name;
-            string levelAuthorName = song.Metadata.LevelAuthorName;
-
-            foreach (string character in excludedCharacters)
+            try
             {
-                songName = songName.Replace(character, "");
-                levelAuthorName = levelAuthorName.Replace(character, "");
+                string songName = song.Name;
+                string levelAuthorName = song.Metadata.LevelAuthorName;
+
+                foreach (string character in excludedCharacters)
+                {
+                    songName = songName.Replace(character, "");
+                    levelAuthorName = levelAuthorName.Replace(character, "");
+                }
+
+                string downloadFilePath = $@"{downloadPath}\{song.Key}.zip";
+                string downloadString = $"{beatSaver}{song.DownloadURL}";
+                string extractPath = $@"{downloadPath}\{song.Key}";
+                string songFolderPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
+
+                using (WebClient webClient = new WebClient())
+                {
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    song.IsDownloading = true;
+                    DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(song));
+                    await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
+                    if (!Directory.Exists(extractPath))
+                        Directory.CreateDirectory(extractPath);
+
+                    ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
+                    File.Delete(downloadFilePath);
+                    Directory.Move(extractPath, songFolderPath);
+
+                    song.Metadata.FolderPath = songFolderPath;
+                    song.IsDownloading = false;
+                    song.IsDownloaded = true;
+                    DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
+                }
             }
-
-            string downloadFilePath = $@"{downloadPath}\{song.Key}.zip";
-            string downloadString = $"{beatSaver}{song.DownloadURL}";
-            string extractPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
-
-            if (!Directory.Exists(extractPath))
-                Directory.CreateDirectory(extractPath);
-
-            using (WebClient webClient = new WebClient())
+            catch (Exception)
             {
-                webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
-                song.IsDownloading = true;
-                DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(song));
-                await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
-                ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
-                File.Delete(downloadFilePath);
-
-                song.Metadata.FolderPath = extractPath;
-                song.IsDownloading = false;
-                song.IsDownloaded = true;
-                DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
-            }
-        }
-
-        public async Task DownloadSong(string key)
-        {
-            OnlineBeatmap onlineBeatmap = await GetBeatmap(key);
-            string songName = onlineBeatmap.Name;
-            string levelAuthorName = onlineBeatmap.Metadata.LevelAuthorName;
-
-            foreach (string character in excludedCharacters)
-            {
-                songName = songName.Replace(character, "");
-                levelAuthorName = levelAuthorName.Replace(character, "");
-            }
-
-            string downloadFilePath = $@"{downloadPath}\{onlineBeatmap.Key}.zip";
-            string downloadString = $"{beatSaver}{onlineBeatmap.DownloadURL}";
-            string extractPath = $@"{SongsPath}\{onlineBeatmap.Key} ({songName} - {levelAuthorName})";
-
-            if (!Directory.Exists(extractPath))
-                Directory.CreateDirectory(extractPath);
-
-            using (WebClient webClient = new WebClient())
-            {
-                webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
-                onlineBeatmap.IsDownloading = true;
-                DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(onlineBeatmap));
-                await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
-                ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
-                File.Delete(downloadFilePath);
-
-                onlineBeatmap.Metadata.FolderPath = extractPath;
-                onlineBeatmap.IsDownloading = false;
-                onlineBeatmap.IsDownloaded = true;
-                DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(onlineBeatmap));
+                throw;
             }
         }
 
