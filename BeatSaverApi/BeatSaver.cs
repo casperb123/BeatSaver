@@ -145,7 +145,7 @@ namespace BeatSaverApi
             }
         }
 
-        public async Task<OnlineBeatmaps> GetOnlineBeatmaps(string query, MapSort mapSort, int page = 0)
+        public async Task<(bool isValid, OnlineBeatmaps onlineBeatmaps)> GetOnlineBeatmaps(string query, MapSort mapSort, int page = 0)
         {
             try
             {
@@ -213,12 +213,15 @@ namespace BeatSaverApi
                         }
                     }
 
-                    return beatSaverMaps;
+                    return (true, beatSaverMaps);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return null;
+                if (e.Message.Contains("(404) Not Found"))
+                    return (true, null);
+
+                return (false, null);
             }
         }
 
