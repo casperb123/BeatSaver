@@ -8,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace BeatSaverApi
@@ -248,6 +249,8 @@ namespace BeatSaverApi
         {
             LocalBeatmaps localBeatmaps = cachedLocalBeatmaps is null ? new LocalBeatmaps() : new LocalBeatmaps(cachedLocalBeatmaps);
             List<string> songs = Directory.GetDirectories(SongsPath).ToList();
+            Exception exception = null;
+            bool loadedFirstOnlineBeatmap = false;
 
             foreach (LocalBeatmap beatmap in localBeatmaps.Maps.ToList())
             {
@@ -266,24 +269,38 @@ namespace BeatSaverApi
             foreach (string songFolder in songs)
             {
                 string infoFile = $@"{songFolder}\info.dat";
-                string[] folderName = new DirectoryInfo(songFolder).Name.Split(" ");
-                LocalIdentifier identifier = folderName.Length == 1 ? new LocalIdentifier(false, folderName[0]) : new LocalIdentifier(true, folderName[0]);
-
                 if (!File.Exists(infoFile))
                     continue;
 
+                string[] folderName = new DirectoryInfo(songFolder).Name.Split(" ");
+                LocalIdentifier identifier = folderName.Length == 1 ? new LocalIdentifier(false, folderName[0]) : new LocalIdentifier(true, folderName[0]);
+
                 string json = await File.ReadAllTextAsync(infoFile);
                 LocalBeatmap beatmap = JsonConvert.DeserializeObject<LocalBeatmap>(json);
-                if (File.Exists($@"{songFolder}\{beatmap.CoverImageFilename}"))
-                    beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
-
                 beatmap.Identifier = identifier;
                 beatmap.FolderPath = songFolder;
+
+                if (File.Exists($@"{songFolder}\{beatmap.CoverImageFilename}"))
+                    beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
+                else
+                {
+                    if (beatmap.Errors is null)
+                        beatmap.Errors = new List<string>();
+
+                    beatmap.Errors.Add($"The cover image file '{beatmap.CoverImageFilename}' couldn't be found");
+                }
 
                 if (File.Exists($@"{songFolder}\{beatmap.SongFilename}"))
                 {
                     MediaInfo mediaInfo = ffProbe.GetMediaInfo($@"{beatmap.FolderPath}\{beatmap.SongFilename}");
                     beatmap.Duration = mediaInfo.Duration;
+                }
+                else
+                {
+                    if (beatmap.Errors is null)
+                        beatmap.Errors = new List<string>();
+
+                    beatmap.Errors.Add($"The song file '{beatmap.SongFilename}' couldn't be found");
                 }
 
                 foreach (DifficultyBeatmapSet difficultyBeatmapSet in beatmap.DifficultyBeatmapSets)
@@ -300,13 +317,67 @@ namespace BeatSaverApi
                         beatmap.ExpertPlus = true;
                 }
 
-                _ = Task.Run(async () => beatmap.OnlineBeatmap = await GetBeatmap(identifier));
+                if (!loadedFirstOnlineBeatmap)
+                {
+                    try
+                    {
+                        beatmap.OnlineBeatmap = await GetBeatmap(identifier);
+                        loadedFirstOnlineBeatmap = true;
+                    }
+                    catch (Exception e)
+                    {
+                        exception = e;
+                        if (beatmap.Errors is null)
+                            beatmap.Errors = new List<string>();
+
+                        if (e.InnerException is null || string.Equals(e.Message, e.InnerException.Message))
+                            beatmap.Errors.Add(e.Message);
+                        else
+                            beatmap.Errors.Add($"{e.Message} ({e.InnerException.Message})");
+
+                        loadedFirstOnlineBeatmap = true;
+                    }
+                }
+                else
+                {
+                    if (exception is null)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                beatmap.OnlineBeatmap = await GetBeatmap(identifier);
+                            }
+                            catch (Exception e)
+                            {
+                                exception = e;
+                                if (beatmap.Errors is null)
+                                    beatmap.Errors = new List<string>();
+
+                                if (e.InnerException is null || string.Equals(e.Message, e.InnerException.Message))
+                                    beatmap.Errors.Add(e.Message);
+                                else
+                                    beatmap.Errors.Add($"{e.Message} ({e.InnerException.Message})");
+                            }
+                        }).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        if (beatmap.Errors is null)
+                            beatmap.Errors = new List<string>();
+
+                        if (exception.InnerException is null || string.Equals(exception.Message, exception.InnerException.Message))
+                            beatmap.Errors.Add(exception.Message);
+                        else
+                            beatmap.Errors.Add($"{exception.Message} ({exception.InnerException.Message})");
+                    }
+                }
 
                 _ = Task.Run(async () =>
                 {
                     List<LocalBeatmapDetails> localBeatmapDetails = await GetLocalBeatmapDetails(beatmap, beatmap.DifficultyBeatmapSets);
                     beatmap.Details = localBeatmapDetails;
-                });
+                }).ConfigureAwait(false);
 
                 localBeatmaps.Maps.Add(beatmap);
             }
@@ -479,6 +550,10 @@ namespace BeatSaverApi
                     DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
                 }
             }
+            catch (WebException e)
+            {
+                throw new WebException("Can't connect to BeatSaber", e.InnerException);
+            }
             catch (Exception)
             {
                 throw;
@@ -528,9 +603,13 @@ namespace BeatSaverApi
                     return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
                 }
             }
+            catch (WebException e)
+            {
+                throw new WebException("The beatmap couldn't be found on BeatSaver", e.InnerException);
+            }
             catch (Exception)
             {
-                return null;
+                throw;
             }
         }
 
@@ -546,9 +625,13 @@ namespace BeatSaverApi
                     return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
                 }
             }
+            catch (WebException e)
+            {
+                throw new WebException("Can't connect to BeatSaver", e.InnerException);
+            }
             catch (Exception)
             {
-                return null;
+                throw;
             }
         }
     }

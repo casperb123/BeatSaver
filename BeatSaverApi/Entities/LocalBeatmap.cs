@@ -101,6 +101,8 @@ namespace BeatSaverApi.Entities
         public TimeSpan? Duration { get; set; }
         public int Page { get; set; }
 
+        public List<string> Errors { get; set; }
+
         public OnlineBeatmap OnlineBeatmap
         {
             get { return onlineBeatmap; }
@@ -110,6 +112,7 @@ namespace BeatSaverApi.Entities
                 OnPropertyChanged(nameof(OnlineBeatmap));
             }
         }
+
         public int? Downloads { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
