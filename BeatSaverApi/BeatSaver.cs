@@ -249,8 +249,6 @@ namespace BeatSaverApi
         {
             LocalBeatmaps localBeatmaps = cachedLocalBeatmaps is null ? new LocalBeatmaps() : new LocalBeatmaps(cachedLocalBeatmaps);
             List<string> songs = Directory.GetDirectories(SongsPath).ToList();
-            Exception exception = null;
-            bool loadedFirstOnlineBeatmap = false;
 
             foreach (LocalBeatmap beatmap in localBeatmaps.Maps.ToList())
             {
@@ -317,16 +315,14 @@ namespace BeatSaverApi
                         beatmap.ExpertPlus = true;
                 }
 
-                if (!loadedFirstOnlineBeatmap)
+                _ = Task.Run(async () =>
                 {
                     try
                     {
                         beatmap.OnlineBeatmap = await GetBeatmap(identifier);
-                        loadedFirstOnlineBeatmap = true;
                     }
                     catch (Exception e)
                     {
-                        exception = e;
                         if (beatmap.Errors is null)
                             beatmap.Errors = new List<string>();
 
@@ -334,44 +330,8 @@ namespace BeatSaverApi
                             beatmap.Errors.Add(e.Message);
                         else
                             beatmap.Errors.Add($"{e.Message} ({e.InnerException.Message})");
-
-                        loadedFirstOnlineBeatmap = true;
                     }
-                }
-                else
-                {
-                    if (exception is null)
-                    {
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                beatmap.OnlineBeatmap = await GetBeatmap(identifier);
-                            }
-                            catch (Exception e)
-                            {
-                                exception = e;
-                                if (beatmap.Errors is null)
-                                    beatmap.Errors = new List<string>();
-
-                                if (e.InnerException is null || string.Equals(e.Message, e.InnerException.Message))
-                                    beatmap.Errors.Add(e.Message);
-                                else
-                                    beatmap.Errors.Add($"{e.Message} ({e.InnerException.Message})");
-                            }
-                        }).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        if (beatmap.Errors is null)
-                            beatmap.Errors = new List<string>();
-
-                        if (exception.InnerException is null || string.Equals(exception.Message, exception.InnerException.Message))
-                            beatmap.Errors.Add(exception.Message);
-                        else
-                            beatmap.Errors.Add($"{exception.Message} ({exception.InnerException.Message})");
-                    }
-                }
+                }).ConfigureAwait(false);
 
                 _ = Task.Run(async () =>
                 {
