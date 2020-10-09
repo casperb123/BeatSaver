@@ -143,9 +143,13 @@ namespace BeatSaverApi
                     return beatSaverMaps;
                 }
             }
+            catch (WebException e)
+            {
+                throw new WebException("Can't connect to Beat Saver", e.InnerException);
+            }
             catch (Exception)
             {
-                return null;
+                throw;
             }
         }
 
