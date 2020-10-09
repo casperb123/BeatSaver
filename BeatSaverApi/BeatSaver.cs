@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using NReco.VideoInfo;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -32,6 +34,7 @@ namespace BeatSaverApi
         public string SongsPath;
 
         public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
+        public event EventHandler<DownloadProgressedEventArgs> DownloadProgressed;
         public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
 
         public BeatSaver(string songsPath)
@@ -473,6 +476,39 @@ namespace BeatSaverApi
             return newLocalBeatmaps;
         }
 
+        private void ProgressChangedFire(OnlineBeatmap song, DateTime startTime, DownloadProgressChangedEventArgs e)
+        {
+            string received = string.Format(CultureInfo.InvariantCulture, "{0:n0} kb", e.BytesReceived / 1000);
+            string toReceive = string.Format(CultureInfo.InvariantCulture, "{0:n0} kb", e.TotalBytesToReceive / 1000);
+
+            if (e.BytesReceived / 1000000 >= 1)
+                received = string.Format("{0:.#0} MB", Math.Round((decimal)e.BytesReceived / 1000000, 2));
+            if (e.TotalBytesToReceive / 1000000 >= 1)
+                toReceive = string.Format("{0:.#0} MB", Math.Round((decimal)e.TotalBytesToReceive / 1000000, 2));
+
+            TimeSpan timeSpent = DateTime.Now - startTime;
+            int secondsRemaining = (int)(timeSpent.TotalSeconds / e.ProgressPercentage * (100 - e.ProgressPercentage));
+            TimeSpan timeLeft = new TimeSpan(0, 0, secondsRemaining);
+            string timeLeftString = string.Empty;
+            string timeSpentString = string.Empty;
+
+            if (timeLeft.Hours > 0)
+                timeLeftString += string.Format("{0} hours", timeLeft.Hours);
+            if (timeLeft.Minutes > 0)
+                timeLeftString += string.IsNullOrWhiteSpace(timeLeftString) ? string.Format("{0} min", timeLeft.Minutes) : string.Format(" {0} min", timeLeft.Minutes);
+            if (timeLeft.Seconds >= 0)
+                timeLeftString += string.IsNullOrWhiteSpace(timeLeftString) ? string.Format("{0} sec", timeLeft.Seconds) : string.Format(" {0} sec", timeLeft.Seconds);
+
+            if (timeSpent.Hours > 0)
+                timeSpentString = string.Format("{0} hours", timeSpent.Hours);
+            if (timeSpent.Minutes > 0)
+                timeSpentString += string.IsNullOrWhiteSpace(timeSpentString) ? string.Format("{0} min", timeSpent.Minutes) : string.Format(" {0} min", timeSpent.Minutes);
+            if (timeSpent.Seconds >= 0)
+                timeSpentString += string.IsNullOrWhiteSpace(timeSpentString) ? string.Format("{0} sec", timeSpent.Seconds) : string.Format(" {0} sec", timeSpent.Seconds);
+
+            DownloadProgressed?.Invoke(this, new DownloadProgressedEventArgs(song, e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage, timeLeftString, timeSpentString, received, toReceive));
+        }
+
         public async Task DownloadSong(OnlineBeatmap song)
         {
             try
@@ -493,8 +529,11 @@ namespace BeatSaverApi
 
                 using (WebClient webClient = new WebClient())
                 {
+                    DateTime downloadStartTime = DateTime.Now;
+                    webClient.DownloadProgressChanged += (s, e) => ProgressChangedFire(song, downloadStartTime, e);
                     webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
                     song.IsDownloading = true;
+
                     DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(song));
                     await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
                     if (!Directory.Exists(extractPath))
