@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -90,7 +91,8 @@ namespace BeatSaverApi
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    string projectName = Assembly.GetEntryAssembly().GetName().Name;
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, projectName);
                     string json = null;
 
                     switch (mapSort)
@@ -162,7 +164,8 @@ namespace BeatSaverApi
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    string projectName = Assembly.GetEntryAssembly().GetName().Name;
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, projectName);
                     OnlineBeatmaps beatSaverMaps = null;
 
                     if (mapSort == MapSort.Search)
@@ -485,8 +488,8 @@ namespace BeatSaverApi
 
         private void ProgressChangedFire(OnlineBeatmap song, DateTime startTime, DownloadProgressChangedEventArgs e)
         {
-            string received = string.Format(CultureInfo.InvariantCulture, "{0:n0} kb", e.BytesReceived / 1000);
-            string toReceive = string.Format(CultureInfo.InvariantCulture, "{0:n0} kb", e.TotalBytesToReceive / 1000);
+            string received = string.Format(CultureInfo.InvariantCulture, "{0:n0} kB", e.BytesReceived / 1000);
+            string toReceive = string.Format(CultureInfo.InvariantCulture, "{0:n0} kB", e.TotalBytesToReceive / 1000);
 
             if (e.BytesReceived / 1000000 >= 1)
                 received = string.Format("{0:.#0} MB", Math.Round((decimal)e.BytesReceived / 1000000, 2));
@@ -540,9 +543,11 @@ namespace BeatSaverApi
 
                 using (WebClient webClient = new WebClient())
                 {
-                    DateTime downloadStartTime = DateTime.Now;
-                    webClient.DownloadProgressChanged += (s, e) => ProgressChangedFire(song, downloadStartTime, e);
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    string projectName = Assembly.GetEntryAssembly().GetName().Name;
+
+                    DateTime startTime = DateTime.Now;
+                    webClient.DownloadProgressChanged += (s, e) => ProgressChangedFire(song, startTime, e);
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, projectName);
                     song.IsDownloading = true;
 
                     DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(song));
@@ -550,9 +555,12 @@ namespace BeatSaverApi
                     if (!Directory.Exists(extractPath))
                         Directory.CreateDirectory(extractPath);
 
-                    ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
-                    File.Delete(downloadFilePath);
-                    Directory.Move(extractPath, songFolderPath);
+                    await Task.Run(() =>
+                    {
+                        ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
+                        File.Delete(downloadFilePath);
+                        Directory.Move(extractPath, songFolderPath);
+                    });
 
                     song.Metadata.FolderPath = songFolderPath;
                     song.IsDownloading = false;
@@ -610,7 +618,8 @@ namespace BeatSaverApi
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    string projectName = Assembly.GetEntryAssembly().GetName().Name;
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, projectName);
                     string api = identifier.IsKey ? $"{beatSaverDetailsKeyApi}/{identifier.Value}" : $"{beatSaverDetailsHashApi}/{identifier.Value}";
                     string json = await webClient.DownloadStringTaskAsync(api);
                     return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
@@ -632,7 +641,8 @@ namespace BeatSaverApi
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    webClient.Headers.Add(HttpRequestHeader.UserAgent, "BeatSaverApi");
+                    string projectName = Assembly.GetEntryAssembly().GetName().Name;
+                    webClient.Headers.Add(HttpRequestHeader.UserAgent, projectName);
                     string api = $"{beatSaverDetailsKeyApi}/{key}";
                     string json = await webClient.DownloadStringTaskAsync(api);
                     return JsonConvert.DeserializeObject<OnlineBeatmap>(json);
