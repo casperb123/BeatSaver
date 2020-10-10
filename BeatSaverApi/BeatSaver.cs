@@ -519,7 +519,7 @@ namespace BeatSaverApi
         public async Task DownloadSong(OnlineBeatmap song)
         {
             DirectoryInfo[] directories = Directory.GetDirectories(SongsPath).Select(x => new DirectoryInfo(x)).ToArray();
-            if (directories.FirstOrDefault(x => x.Name.Contains(song.Key)) != null || directories.FirstOrDefault(x => x.Name.Contains(song.Hash)) != null)
+            if (directories.FirstOrDefault(x => x.Name.Contains(song.Key) && x.Name.Contains(song.Metadata.SongName)) != null || directories.FirstOrDefault(x => x.Name.Contains(song.Hash)) != null)
                 throw new InvalidOperationException("The song is already downloaded");
 
             try
