@@ -36,6 +36,8 @@ namespace BeatSaverApi
         public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
         public event EventHandler<DownloadProgressedEventArgs> DownloadProgressed;
         public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
+        public event EventHandler<OnlineBeatmapDeletedEventArgs> OnlineBeatmapDeleted;
+        public event EventHandler<LocalBeatmapDeletedEventArgs> LocalBeatmapDeleted;
 
         public BeatSaver(string songsPath)
         {
@@ -577,6 +579,7 @@ namespace BeatSaverApi
                     Directory.Delete(directory, true);
 
                 song.IsDownloaded = false;
+                OnlineBeatmapDeleted?.Invoke(this, new OnlineBeatmapDeletedEventArgs(song));
             }
         }
 
@@ -586,6 +589,8 @@ namespace BeatSaverApi
 
             if (!string.IsNullOrEmpty(directory))
                 Directory.Delete(directory, true);
+
+            LocalBeatmapDeleted?.Invoke(this, new LocalBeatmapDeletedEventArgs(song));
         }
 
         public void DeleteSongs(ICollection<LocalBeatmap> songs)

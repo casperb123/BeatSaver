@@ -3,11 +3,11 @@ using System;
 
 namespace BeatSaverApi.Events
 {
-    public class DownloadCompletedEventArgs : EventArgs
+    public class OnlineBeatmapDeletedEventArgs : EventArgs
     {
         public OnlineBeatmap Beatmap { get; private set; }
 
-        public DownloadCompletedEventArgs(OnlineBeatmap beatmap)
+        public OnlineBeatmapDeletedEventArgs(OnlineBeatmap beatmap)
         {
             Beatmap = beatmap;
         }

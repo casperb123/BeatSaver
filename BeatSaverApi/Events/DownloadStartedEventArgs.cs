@@ -5,11 +5,11 @@ namespace BeatSaverApi.Events
 {
     public class DownloadStartedEventArgs : EventArgs
     {
-        public OnlineBeatmap Song { get; set; }
+        public OnlineBeatmap Beatmap { get; private set; }
 
-        public DownloadStartedEventArgs(OnlineBeatmap song)
+        public DownloadStartedEventArgs(OnlineBeatmap beatmap)
         {
-            Song = song;
+            Beatmap = beatmap;
         }
     }
 }
