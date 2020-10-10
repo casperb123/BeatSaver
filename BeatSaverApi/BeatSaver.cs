@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace BeatSaverApi
@@ -517,6 +518,10 @@ namespace BeatSaverApi
 
         public async Task DownloadSong(OnlineBeatmap song)
         {
+            DirectoryInfo[] directories = Directory.GetDirectories(SongsPath).Select(x => new DirectoryInfo(x)).ToArray();
+            if (directories.FirstOrDefault(x => x.Name.Contains(song.Key)) != null || directories.FirstOrDefault(x => x.Name.Contains(song.Hash)) != null)
+                throw new InvalidOperationException("The song is already downloaded");
+
             try
             {
                 string songName = song.Name;
