@@ -34,6 +34,7 @@ namespace BeatSaverApi
         private readonly FFProbe ffProbe;
 
         public string SongsPath;
+        public List<OnlineBeatmap> Downloading { get; private set; }
 
         public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
         public event EventHandler<DownloadProgressedEventArgs> DownloadProgressed;
@@ -54,6 +55,7 @@ namespace BeatSaverApi
             beatSaverDetailsKeyApi = $"{beatSaverApi}/maps/detail";
             beatSaverDetailsHashApi = $"{beatSaverApi}/maps/by-hash";
             SongsPath = songsPath;
+            Downloading = new List<OnlineBeatmap>();
 
             string runningPath = AppDomain.CurrentDomain.BaseDirectory;
 #if DEBUG
@@ -138,7 +140,12 @@ namespace BeatSaverApi
                                 SetOnlineNoteInformation(song, characteristic.Difficulties.ExpertPlus);
                         }
 
-                        if (!string.IsNullOrEmpty(folder))
+                        if (string.IsNullOrEmpty(folder))
+                        {
+                            if (Downloading.Any(x => x.Key == song.Key))
+                                song.IsDownloading = true;
+                        }
+                        else
                         {
                             song.IsDownloaded = true;
                             song.Metadata.FolderPath = folder;
@@ -219,7 +226,12 @@ namespace BeatSaverApi
                                     SetOnlineNoteInformation(song, characteristic.Difficulties.ExpertPlus);
                             }
 
-                            if (!string.IsNullOrEmpty(folder))
+                            if (string.IsNullOrEmpty(folder))
+                            {
+                                if (Downloading.Any(x => x.Key == song.Key))
+                                    song.IsDownloading = true;
+                            }
+                            else
                             {
                                 song.IsDownloaded = true;
                                 song.Metadata.FolderPath = folder;
@@ -549,6 +561,7 @@ namespace BeatSaverApi
                     webClient.DownloadProgressChanged += (s, e) => ProgressChangedFire(song, startTime, e);
                     webClient.Headers.Add(HttpRequestHeader.UserAgent, projectName);
                     song.IsDownloading = true;
+                    Downloading.Add(song);
 
                     DownloadStarted?.Invoke(this, new DownloadStartedEventArgs(song));
                     await webClient.DownloadFileTaskAsync(new Uri(downloadString), downloadFilePath);
@@ -565,6 +578,10 @@ namespace BeatSaverApi
                     song.Metadata.FolderPath = songFolderPath;
                     song.IsDownloading = false;
                     song.IsDownloaded = true;
+                    OnlineBeatmap downloadingBeatmap = Downloading.FirstOrDefault(x => x.Key == song.Key);
+                    if (downloadingBeatmap != null)
+                        Downloading.Remove(downloadingBeatmap);
+
                     DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
                 }
             }
