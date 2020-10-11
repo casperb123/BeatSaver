@@ -542,22 +542,22 @@ namespace BeatSaverApi
                 return false;
             }
 
+            string songName = song.Name;
+            string levelAuthorName = song.Metadata.LevelAuthorName;
+
+            foreach (string character in excludedCharacters)
+            {
+                songName = songName.Replace(character, "");
+                levelAuthorName = levelAuthorName.Replace(character, "");
+            }
+
+            string downloadFilePath = $@"{downloadPath}\{song.Key}.zip";
+            string downloadString = $"{beatSaver}{song.DownloadURL}";
+            string extractPath = $@"{downloadPath}\{song.Key}";
+            string songFolderPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
+
             try
             {
-                string songName = song.Name;
-                string levelAuthorName = song.Metadata.LevelAuthorName;
-
-                foreach (string character in excludedCharacters)
-                {
-                    songName = songName.Replace(character, "");
-                    levelAuthorName = levelAuthorName.Replace(character, "");
-                }
-
-                string downloadFilePath = $@"{downloadPath}\{song.Key}.zip";
-                string downloadString = $"{beatSaver}{song.DownloadURL}";
-                string extractPath = $@"{downloadPath}\{song.Key}";
-                string songFolderPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
-
                 using (WebClient webClient = new WebClient())
                 {
                     string projectName = Assembly.GetEntryAssembly().GetName().Name;
@@ -594,11 +594,27 @@ namespace BeatSaverApi
             }
             catch (WebException e)
             {
+                if (File.Exists(downloadFilePath))
+                    File.Delete(downloadFilePath);
+                if (Directory.Exists(extractPath))
+                    Directory.Delete(extractPath, true);
+                if (Directory.Exists(songFolderPath))
+                    Directory.Delete(songFolderPath, true);
+
+                song.IsDownloading = false;
                 DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new WebException("Can't connect to BeatSaver", e.InnerException)));
                 return false;
             }
             catch (Exception e)
             {
+                if (File.Exists(downloadFilePath))
+                    File.Delete(downloadFilePath);
+                if (Directory.Exists(extractPath))
+                    Directory.Delete(extractPath, true);
+                if (Directory.Exists(songFolderPath))
+                    Directory.Delete(songFolderPath, true);
+
+                song.IsDownloading = false;
                 DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, e));
                 return false;
             }
