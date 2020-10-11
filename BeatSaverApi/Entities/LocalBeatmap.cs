@@ -7,16 +7,28 @@ namespace BeatSaverApi.Entities
 {
     public class LocalBeatmap : INotifyPropertyChanged
     {
+        private string environtmentName;
         private string levelAuthorName;
         private string songAuthorName;
         private string songSubName;
+        private string songName;
         private List<LocalBeatmapDetails> details;
         private OnlineBeatmap onlineBeatmap;
 
         [JsonProperty("_version")]
         public string Version { get; set; }
         [JsonProperty("_songName")]
-        public string SongName { get; set; }
+        public string SongName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(songName))
+                    return null;
+                else
+                    return songName;
+            }
+            set { songName = value; }
+        }
         [JsonProperty("_songSubName")]
         public string SongSubName
         {
@@ -68,7 +80,17 @@ namespace BeatSaverApi.Entities
         [JsonProperty("_coverImageFilename")]
         public string CoverImageFilename { get; set; }
         [JsonProperty("_environmentName")]
-        public string EnvironmentName { get; set; }
+        public string EnvironmentName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(environtmentName))
+                    return null;
+                else
+                    return environtmentName;
+            }
+            set { environtmentName = value; }
+        }
         [JsonProperty("_songTimeOffset")]
         public float SongTimeOffset { get; set; }
         [JsonProperty("_customData")]
