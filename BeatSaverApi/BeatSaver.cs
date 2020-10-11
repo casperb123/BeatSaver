@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -39,6 +40,7 @@ namespace BeatSaverApi
         public event EventHandler<DownloadStartedEventArgs> DownloadStarted;
         public event EventHandler<DownloadProgressedEventArgs> DownloadProgressed;
         public event EventHandler<DownloadCompletedEventArgs> DownloadCompleted;
+        public event EventHandler<DownloadFailedEventArgs> DownloadFailed;
         public event EventHandler<OnlineBeatmapDeletedEventArgs> OnlineBeatmapDeleted;
         public event EventHandler<LocalBeatmapDeletedEventArgs> LocalBeatmapDeleted;
 
@@ -531,11 +533,14 @@ namespace BeatSaverApi
             DownloadProgressed?.Invoke(this, new DownloadProgressedEventArgs(song, e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage, timeLeftString, timeSpentString, received, toReceive));
         }
 
-        public async Task DownloadSong(OnlineBeatmap song)
+        public async Task<bool> DownloadSong(OnlineBeatmap song)
         {
             DirectoryInfo[] directories = Directory.GetDirectories(SongsPath).Select(x => new DirectoryInfo(x)).ToArray();
             if (directories.FirstOrDefault(x => x.Name.Contains(song.Key) && x.Name.Contains(song.Metadata.SongName)) != null || directories.FirstOrDefault(x => x.Name.Contains(song.Hash)) != null)
-                throw new InvalidOperationException("The song is already downloaded");
+            {
+                DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new InvalidOperationException("The song is already downloaded")));
+                return false;
+            }
 
             try
             {
@@ -584,14 +589,18 @@ namespace BeatSaverApi
 
                     DownloadCompleted?.Invoke(this, new DownloadCompletedEventArgs(song));
                 }
+
+                return true;
             }
             catch (WebException e)
             {
-                throw new WebException("Can't connect to BeatSaber", e.InnerException);
+                DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new WebException("Can't connect to BeatSaver", e.InnerException)));
+                return false;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, e));
+                return false;
             }
         }
 
