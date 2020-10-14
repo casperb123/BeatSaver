@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 
-namespace BeatSaverApi.Entities
+namespace BeatSaver.Entities
 {
     public class LocalBeatmaps : INotifyPropertyChanged
     {

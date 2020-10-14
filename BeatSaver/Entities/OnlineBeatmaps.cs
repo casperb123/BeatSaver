@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace BeatSaverApi.Entities
+namespace BeatSaver.Entities
 {
     public class OnlineBeatmaps
     {

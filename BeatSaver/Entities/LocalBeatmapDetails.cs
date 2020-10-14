@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BeatSaverApi.Entities
+namespace BeatSaver.Entities
 {
     public class LocalBeatmapDetails
     {

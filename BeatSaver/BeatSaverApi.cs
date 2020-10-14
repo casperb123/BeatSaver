@@ -1,24 +1,20 @@
-﻿using BeatSaverApi.Entities;
-using BeatSaverApi.Events;
+﻿using BeatSaver.Entities;
+using BeatSaver.Events;
 using Newtonsoft.Json;
 using NReco.VideoInfo;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-namespace BeatSaverApi
+namespace BeatSaver
 {
-    public class BeatSaver
+    public class BeatSaverApi
     {
         private readonly string beatSaver;
         private readonly string beatSaverApi;
@@ -44,7 +40,7 @@ namespace BeatSaverApi
         public event EventHandler<OnlineBeatmapDeletedEventArgs> OnlineBeatmapDeleted;
         public event EventHandler<LocalBeatmapDeletedEventArgs> LocalBeatmapDeleted;
 
-        public BeatSaver(string songsPath)
+        public BeatSaverApi(string songsPath)
         {
             beatSaver = "https://beatsaver.com";
             beatSaverApi = $"{beatSaver}/api";

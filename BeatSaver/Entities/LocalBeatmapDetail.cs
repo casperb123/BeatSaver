@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Linq;
 
-namespace BeatSaverApi.Entities
+namespace BeatSaver.Entities
 {
     public class LocalBeatmapDetail
     {

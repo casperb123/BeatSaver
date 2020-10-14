@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace BeatSaverApi.Entities
+namespace BeatSaver.Entities
 {
     public class LocalBeatmap : INotifyPropertyChanged
     {

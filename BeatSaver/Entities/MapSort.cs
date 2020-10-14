@@ -1,4 +1,4 @@
-﻿namespace BeatSaverApi.Entities
+﻿namespace BeatSaver.Entities
 {
     public enum MapSort
     {

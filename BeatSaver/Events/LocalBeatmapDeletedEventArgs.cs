@@ -1,9 +1,9 @@
-﻿using BeatSaverApi.Entities;
+﻿using BeatSaver.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace BeatSaverApi.Events
+namespace BeatSaver.Events
 {
     public class LocalBeatmapDeletedEventArgs : EventArgs
     {

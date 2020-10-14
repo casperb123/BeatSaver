@@ -1,7 +1,7 @@
-﻿using BeatSaverApi.Entities;
+﻿using BeatSaver.Entities;
 using System;
 
-namespace BeatSaverApi.Events
+namespace BeatSaver.Events
 {
     public class OnlineBeatmapDeletedEventArgs : EventArgs
     {
