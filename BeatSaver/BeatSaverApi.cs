@@ -57,7 +57,7 @@ namespace BeatSaver
 
             string runningPath = AppDomain.CurrentDomain.BaseDirectory;
 #if DEBUG
-            string ffmpegPath = $@"{Path.GetFullPath(Path.Combine(runningPath, @"..\..\..\..\..\"))}BeatSaverApi\BeatSaverApi\ffmpeg";
+            string ffmpegPath = $@"{Path.GetFullPath(Path.Combine(runningPath, @"..\..\..\..\..\"))}BeatSaver\BeatSaver\ffmpeg";
 #else
             string ffmpegPath = $@"{runningPath}\ffmpeg";
 #endif
@@ -531,13 +531,6 @@ namespace BeatSaver
 
         public async Task<bool> DownloadSong(OnlineBeatmap song)
         {
-            DirectoryInfo[] directories = Directory.GetDirectories(SongsPath).Select(x => new DirectoryInfo(x)).ToArray();
-            if (directories.FirstOrDefault(x => x.Name.Contains(song.Key) && x.Name.Contains(song.Metadata.SongName)) != null || directories.FirstOrDefault(x => x.Name.Contains(song.Hash)) != null)
-            {
-                DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new InvalidOperationException("The song is already downloaded")));
-                return false;
-            }
-
             string songName = song.Name;
             string levelAuthorName = song.Metadata.LevelAuthorName;
 
@@ -551,6 +544,12 @@ namespace BeatSaver
             string downloadString = $"{beatSaver}{song.DownloadURL}";
             string extractPath = $@"{downloadPath}\{song.Key}";
             string songFolderPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
+
+            if (Directory.Exists(songFolderPath) || Directory.Exists($@"{SongsPath}\{song.Hash}"))
+            {
+                DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new InvalidOperationException("The song is already downloaded")));
+                return false;
+            }
 
             try
             {
