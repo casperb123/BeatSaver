@@ -56,18 +56,15 @@ namespace BeatSaver
             Downloading = new List<OnlineBeatmap>();
 
             string runningPath = AppDomain.CurrentDomain.BaseDirectory;
-#if DEBUG
-            string ffmpegPath = $@"{Path.GetFullPath(Path.Combine(runningPath, @"..\..\..\..\..\"))}BeatSaver\BeatSaver\ffmpeg";
-#else
-            string ffmpegPath = $@"{runningPath}\ffmpeg";
-#endif
+            string ffmpegPath = Path.Combine(runningPath, "ffmpeg");
+
             ffProbe = new FFProbe
             {
                 ToolPath = ffmpegPath
             };
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            downloadPath = $@"{appData}\BeatSaverApi";
+            downloadPath = Path.Combine(appData, "BeatSaverApi");
 
             if (!Directory.Exists(downloadPath))
                 Directory.CreateDirectory(downloadPath);
@@ -289,7 +286,7 @@ namespace BeatSaver
 
             foreach (string songFolder in songs)
             {
-                string infoFile = $@"{songFolder}\info.dat";
+                string infoFile = Path.Combine(songFolder, "info.dat");
                 if (!File.Exists(infoFile))
                     continue;
 
@@ -301,8 +298,9 @@ namespace BeatSaver
                 beatmap.Identifier = identifier;
                 beatmap.FolderPath = songFolder;
 
-                if (File.Exists($@"{songFolder}\{beatmap.CoverImageFilename}"))
-                    beatmap.CoverImagePath = $@"{songFolder}\{beatmap.CoverImageFilename}";
+                string coverImagePath = Path.Combine(songFolder, beatmap.CoverImageFilename);
+                if (File.Exists(coverImagePath))
+                    beatmap.CoverImagePath = coverImagePath;
                 else
                 {
                     if (beatmap.Errors is null)
@@ -311,9 +309,10 @@ namespace BeatSaver
                     beatmap.Errors.Add($"The cover image file '{beatmap.CoverImageFilename}' couldn't be found");
                 }
 
-                if (File.Exists($@"{songFolder}\{beatmap.SongFilename}"))
+                string songFilePath = Path.Combine(songFolder, beatmap.SongFilename);
+                if (File.Exists(songFilePath))
                 {
-                    MediaInfo mediaInfo = ffProbe.GetMediaInfo($@"{beatmap.FolderPath}\{beatmap.SongFilename}");
+                    MediaInfo mediaInfo = ffProbe.GetMediaInfo(songFilePath);
                     beatmap.Duration = mediaInfo.Duration;
                 }
                 else
@@ -391,7 +390,7 @@ namespace BeatSaver
                     if (halfJumpDuration < minHalfJumpDuration)
                         halfJumpDuration = minHalfJumpDuration;
 
-                    string filePath = $@"{localBeatmap.FolderPath}\{difficultyBeatmap.BeatmapFilename}";
+                    string filePath = Path.Combine(localBeatmap.FolderPath, difficultyBeatmap.BeatmapFilename);
                     string json = await File.ReadAllTextAsync(filePath);
                     LocalBeatmapDetail beatmapDetail = JsonConvert.DeserializeObject<LocalBeatmapDetail>(json);
                     beatmapDetail.HalfJumpDuration = halfJumpDuration;
@@ -540,12 +539,13 @@ namespace BeatSaver
                 levelAuthorName = levelAuthorName.Replace(character, "");
             }
 
-            string downloadFilePath = $@"{downloadPath}\{song.Key}.zip";
+            string downloadFilePath = Path.Combine(downloadPath, $"{song.Key}.zip");
             string downloadString = $"{beatSaver}{song.DownloadURL}";
-            string extractPath = $@"{downloadPath}\{song.Key}";
-            string songFolderPath = $@"{SongsPath}\{song.Key} ({songName} - {levelAuthorName})";
+            string extractPath = Path.Combine(downloadPath, song.Key);
+            string songFolderPathKey = Path.Combine(SongsPath, $"{song.Key} ({songName} - {levelAuthorName}");
+            string songFolderPathHash = Path.Combine(SongsPath, song.Hash);
 
-            if (Directory.Exists(songFolderPath) || Directory.Exists($@"{SongsPath}\{song.Hash}"))
+            if (Directory.Exists(songFolderPathKey) || Directory.Exists(songFolderPathHash))
             {
                 DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new InvalidOperationException("The song is already downloaded")));
                 return false;
@@ -570,12 +570,19 @@ namespace BeatSaver
 
                     await Task.Run(() =>
                     {
-                        ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
-                        File.Delete(downloadFilePath);
-                        Directory.Move(extractPath, songFolderPath);
+                        try
+                        {
+                            ZipFile.ExtractToDirectory(downloadFilePath, extractPath);
+                            File.Delete(downloadFilePath);
+                            Directory.Move(extractPath, songFolderPathKey);
+                        }
+                        catch (Exception)
+                        {
+                            throw;
+                        }
                     });
 
-                    song.Metadata.FolderPath = songFolderPath;
+                    song.Metadata.FolderPath = songFolderPathKey;
                     song.IsDownloading = false;
                     song.IsDownloaded = true;
                     OnlineBeatmap downloadingBeatmap = Downloading.FirstOrDefault(x => x.Key == song.Key);
@@ -593,8 +600,8 @@ namespace BeatSaver
                     File.Delete(downloadFilePath);
                 if (Directory.Exists(extractPath))
                     Directory.Delete(extractPath, true);
-                if (Directory.Exists(songFolderPath))
-                    Directory.Delete(songFolderPath, true);
+                if (Directory.Exists(songFolderPathKey))
+                    Directory.Delete(songFolderPathKey, true);
 
                 song.IsDownloading = false;
                 DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, new WebException("Can't connect to BeatSaver", e.InnerException)));
@@ -606,8 +613,8 @@ namespace BeatSaver
                     File.Delete(downloadFilePath);
                 if (Directory.Exists(extractPath))
                     Directory.Delete(extractPath, true);
-                if (Directory.Exists(songFolderPath))
-                    Directory.Delete(songFolderPath, true);
+                if (Directory.Exists(songFolderPathKey))
+                    Directory.Delete(songFolderPathKey, true);
 
                 song.IsDownloading = false;
                 DownloadFailed?.Invoke(this, new DownloadFailedEventArgs(song, e));
