@@ -196,8 +196,20 @@ namespace BeatSaver.Entities
     }
     public class DifficultyBeatmapCustomData
     {
+        private string difficultyLabel;
+
         [JsonProperty("_difficultyLabel")]
-        public string DifficultyLabel { get; set; }
+        public string DifficultyLabel
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(difficultyLabel))
+                    return null;
+                else
+                    return difficultyLabel;
+            }
+            set { difficultyLabel = value; }
+        }
         [JsonProperty("_editorOffset")]
         public float EditorOffset { get; set; }
         [JsonProperty("_editorOldOffset")]
